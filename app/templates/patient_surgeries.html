@@ -22,7 +22,7 @@
                 </svg>
                 <span>Timeline</span>
             </a>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+            <button id="addPatientSurgeryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200" data-patient-id="{{ patient.id }}">
                 Add Surgery
             </button>
             <a href="/patients/{{ patient.id }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
@@ -68,7 +68,8 @@
                     <dt class="text-sm font-medium text-gray-500 truncate">First Surgery</dt>
                     <dd class="text-lg font-medium text-gray-900">
                         {% if surgeries %}
-                            {{ surgeries|sort(attribute='surgery_date')|first.surgery_date.strftime('%Y-%m-%d') }}
+                            {% set first_surgery = surgeries|sort(attribute='surgery_date')|first %}
+                            {{ first_surgery.surgery_date.strftime('%Y-%m-%d') if first_surgery.surgery_date else "None" }}
                         {% else %}
                             None
                         {% endif %}
@@ -236,7 +237,7 @@
     <p class="text-gray-500 mb-6 max-w-md mx-auto">
         This patient has no recorded surgical procedures. Add a surgery record to track their treatment history.
     </p>
-    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
+    <button id="addFirstPatientSurgeryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto" data-patient-id="{{ patient.id }}">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
         </svg>
@@ -244,4 +245,355 @@
     </button>
 </div>
 {% endif %}
+
+<!-- Surgery Creation Modal -->
+<div id="patientSurgeryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Add Surgery for {{ patient.first_name }} {{ patient.last_name }}</h3>
+                <button id="closePatientSurgeryModal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="patientSurgeryForm" class="space-y-6">
+                <!-- Hidden patient ID -->
+                <input type="hidden" id="patient_surgery_patient_id" name="patient_id" value="{{ patient.id }}">
+
+                <!-- Patient Information Display -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Patient Information</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg class="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h5 class="text-lg font-semibold text-gray-900">{{ patient.first_name }} {{ patient.last_name }}</h5>
+                                <p class="text-sm text-gray-600">MRN: {{ patient.medical_record_number }}</p>
+                                {% if patient.date_of_birth %}
+                                <p class="text-sm text-gray-600">DOB: {{ patient.date_of_birth.strftime('%Y-%m-%d') }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Surgery Fields -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Surgery Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patient_surgery_date" class="block text-sm font-medium text-gray-700">Surgery Date *</label>
+                            <input type="date" id="patient_surgery_date" name="surgery_date" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_surgery_type" class="block text-sm font-medium text-gray-700">Surgery Type *</label>
+                            <select id="patient_surgery_type" name="surgery_type" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Surgery Type</option>
+                                <option value="biopsy">Biopsy</option>
+                                <option value="partial_resection">Partial Resection</option>
+                                <option value="subtotal_resection">Subtotal Resection (STR)</option>
+                                <option value="gross_total_resection">Gross Total Resection (GTR)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="patient_surgeon_name" class="block text-sm font-medium text-gray-700">Surgeon Name *</label>
+                            <input type="text" id="patient_surgeon_name" name="surgeon_name" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_hospital" class="block text-sm font-medium text-gray-700">Hospital</label>
+                            <input type="text" id="patient_hospital" name="hospital"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_extent_of_resection" class="block text-sm font-medium text-gray-700">Extent of Resection</label>
+                            <select id="patient_extent_of_resection" name="extent_of_resection"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Extent</option>
+                                <option value="GTR (>95%)">GTR (>95%)</option>
+                                <option value="STR (90-95%)">STR (90-95%)</option>
+                                <option value="Partial (50-90%)">Partial (50-90%)</option>
+                                <option value="Biopsy (<50%)">Biopsy (<50%)</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="patient_operative_time_minutes" class="block text-sm font-medium text-gray-700">Operative Time (minutes)</label>
+                            <input type="number" id="patient_operative_time_minutes" name="operative_time_minutes" min="0"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_estimated_blood_loss_ml" class="block text-sm font-medium text-gray-700">Estimated Blood Loss (mL)</label>
+                            <input type="number" id="patient_estimated_blood_loss_ml" name="estimated_blood_loss_ml" min="0"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_discharge_date" class="block text-sm font-medium text-gray-700">Discharge Date</label>
+                            <input type="date" id="patient_discharge_date" name="discharge_date"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tumor Information -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Tumor Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patient_tumor_location" class="block text-sm font-medium text-gray-700">Tumor Location</label>
+                            <input type="text" id="patient_tumor_location" name="tumor_location" placeholder="Select anatomical location or enter custom"
+                                   value="{{ patient.primary_location or '' }}"
+                                   data-anatomical-selector
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_laterality" class="block text-sm font-medium text-gray-700">Laterality</label>
+                            <select id="patient_laterality" name="laterality"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Laterality</option>
+                                <option value="Left">Left</option>
+                                <option value="Right">Right</option>
+                                <option value="Bilateral">Bilateral</option>
+                                <option value="Midline">Midline</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="patient_preop_tumor_size" class="block text-sm font-medium text-gray-700">Preop Tumor Size</label>
+                            <input type="text" id="patient_preop_tumor_size" name="preop_tumor_size" placeholder="e.g., 4.2 x 3.1 x 2.8 cm"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="patient_preop_imaging_date" class="block text-sm font-medium text-gray-700">Preop Imaging Date</label>
+                            <input type="date" id="patient_preop_imaging_date" name="preop_imaging_date"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinical Notes -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Clinical Notes</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="patient_procedure_details" class="block text-sm font-medium text-gray-700">Procedure Details</label>
+                            <textarea id="patient_procedure_details" name="procedure_details" rows="3" placeholder="Describe the surgical procedure..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="patient_complications" class="block text-sm font-medium text-gray-700">Complications</label>
+                            <textarea id="patient_complications" name="complications" rows="3" placeholder="Any complications during or after surgery..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="patient_postop_findings" class="block text-sm font-medium text-gray-700">Postoperative Findings</label>
+                            <textarea id="patient_postop_findings" name="postop_findings" rows="3" placeholder="Postoperative imaging and clinical findings..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="patient_notes" class="block text-sm font-medium text-gray-700">Additional Notes</label>
+                            <textarea id="patient_notes" name="notes" rows="3" placeholder="Any additional notes or observations..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelPatientSurgeryBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitPatientSurgeryBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Create Surgery
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<div id="patientSurgeryMessageContainer" class="fixed top-4 right-4 z-50 hidden">
+    <div id="patientSurgeryMessageAlert" class="max-w-sm mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+        <span id="patientSurgeryMessageText" class="block sm:inline"></span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <svg id="closePatientSurgeryMessage" class="fill-current h-6 w-6 text-green-500 cursor-pointer" role="button" viewBox="0 0 20 20">
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+        </span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/anatomical_locations.js"></script>
+<script>
+// Patient Surgery Modal functionality
+const patientSurgeryModal = document.getElementById('patientSurgeryModal');
+const addPatientSurgeryBtn = document.getElementById('addPatientSurgeryBtn');
+const addFirstPatientSurgeryBtn = document.getElementById('addFirstPatientSurgeryBtn');
+const closePatientSurgeryModal = document.getElementById('closePatientSurgeryModal');
+const cancelPatientSurgeryBtn = document.getElementById('cancelPatientSurgeryBtn');
+const patientSurgeryForm = document.getElementById('patientSurgeryForm');
+
+// Open modal
+function openPatientSurgeryModal() {
+    patientSurgeryModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close modal
+function closePatientSurgeryModalFunc() {
+    patientSurgeryModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    patientSurgeryForm.reset();
+    // Restore the patient ID after reset
+    document.getElementById('patient_surgery_patient_id').value = '{{ patient.id }}';
+    // Restore the tumor location if it exists
+    {% if patient.primary_location %}
+    document.getElementById('patient_tumor_location').value = '{{ patient.primary_location }}';
+    {% endif %}
+}
+
+// Event listeners
+if (addPatientSurgeryBtn) {
+    addPatientSurgeryBtn.addEventListener('click', openPatientSurgeryModal);
+}
+
+if (addFirstPatientSurgeryBtn) {
+    addFirstPatientSurgeryBtn.addEventListener('click', openPatientSurgeryModal);
+}
+
+closePatientSurgeryModal.addEventListener('click', closePatientSurgeryModalFunc);
+cancelPatientSurgeryBtn.addEventListener('click', closePatientSurgeryModalFunc);
+
+// Close modal when clicking outside
+patientSurgeryModal.addEventListener('click', function(e) {
+    if (e.target === patientSurgeryModal) {
+        closePatientSurgeryModalFunc();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !patientSurgeryModal.classList.contains('hidden')) {
+        closePatientSurgeryModalFunc();
+    }
+});
+
+// Form submission
+patientSurgeryForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitPatientSurgeryBtn');
+    const originalText = submitBtn.textContent;
+
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+
+    try {
+        // Collect form data
+        const formData = new FormData(patientSurgeryForm);
+        const surgeryData = {};
+
+        // Convert FormData to object, handling empty values
+        for (const [key, value] of formData.entries()) {
+            if (value.trim() !== '') {
+                // Convert numeric fields
+                if (key === 'patient_id' || key === 'operative_time_minutes' || key === 'estimated_blood_loss_ml') {
+                    surgeryData[key] = parseInt(value);
+                } else {
+                    surgeryData[key] = value;
+                }
+            }
+        }
+
+        // Send POST request
+        const response = await fetch('/api/surgeries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(surgeryData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Success
+            showPatientSurgeryMessage(result.message || 'Surgery created successfully!', 'success');
+            closePatientSurgeryModalFunc();
+
+            // Reload the page to show the new surgery
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            // Error
+            showPatientSurgeryMessage(result.detail || 'Error creating surgery', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showPatientSurgeryMessage('Network error occurred. Please try again.', 'error');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Message display function
+function showPatientSurgeryMessage(message, type = 'success') {
+    const messageContainer = document.getElementById('patientSurgeryMessageContainer');
+    const messageAlert = document.getElementById('patientSurgeryMessageAlert');
+    const messageText = document.getElementById('patientSurgeryMessageText');
+
+    // Set message text
+    messageText.textContent = message;
+
+    // Set message type styling
+    if (type === 'error') {
+        messageAlert.className = 'max-w-sm mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+    } else {
+        messageAlert.className = 'max-w-sm mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative';
+    }
+
+    // Show message
+    messageContainer.classList.remove('hidden');
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        messageContainer.classList.add('hidden');
+    }, 5000);
+}
+
+// Close message manually
+document.getElementById('closePatientSurgeryMessage').addEventListener('click', function() {
+    document.getElementById('patientSurgeryMessageContainer').classList.add('hidden');
+});
+</script>
 {% endblock %}

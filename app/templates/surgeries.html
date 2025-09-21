@@ -7,7 +7,7 @@
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
         <div class="flex space-x-3">
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+            <button id="addSurgeryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
@@ -196,7 +196,7 @@
     <p class="text-gray-500 mb-6 max-w-md mx-auto">
         No surgical procedures have been recorded in the system yet. Start by adding surgery records for your patients.
     </p>
-    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
+    <button id="addFirstSurgeryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
         </svg>
@@ -204,4 +204,363 @@
     </button>
 </div>
 {% endif %}
+
+<!-- Surgery Creation Modal -->
+<div id="surgeryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Add New Surgery</h3>
+                <button id="closeSurgeryModal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="surgeryForm" class="space-y-6">
+                <!-- Patient Selection -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Patient Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patient_id" class="block text-sm font-medium text-gray-700">Patient *</label>
+                            <select id="patient_id" name="patient_id" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Patient</option>
+                                <!-- Patients will be loaded dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Core Surgery Fields -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Surgery Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="surgery_date" class="block text-sm font-medium text-gray-700">Surgery Date *</label>
+                            <input type="date" id="surgery_date" name="surgery_date" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="surgery_type" class="block text-sm font-medium text-gray-700">Surgery Type *</label>
+                            <select id="surgery_type" name="surgery_type" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Surgery Type</option>
+                                <option value="biopsy">Biopsy</option>
+                                <option value="partial_resection">Partial Resection</option>
+                                <option value="subtotal_resection">Subtotal Resection (STR)</option>
+                                <option value="gross_total_resection">Gross Total Resection (GTR)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="surgeon_name" class="block text-sm font-medium text-gray-700">Surgeon Name *</label>
+                            <input type="text" id="surgeon_name" name="surgeon_name" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="hospital" class="block text-sm font-medium text-gray-700">Hospital</label>
+                            <input type="text" id="hospital" name="hospital"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="extent_of_resection" class="block text-sm font-medium text-gray-700">Extent of Resection</label>
+                            <select id="extent_of_resection" name="extent_of_resection"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Extent</option>
+                                <option value="GTR (>95%)">GTR (>95%)</option>
+                                <option value="STR (90-95%)">STR (90-95%)</option>
+                                <option value="Partial (50-90%)">Partial (50-90%)</option>
+                                <option value="Biopsy (<50%)">Biopsy (<50%)</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="operative_time_minutes" class="block text-sm font-medium text-gray-700">Operative Time (minutes)</label>
+                            <input type="number" id="operative_time_minutes" name="operative_time_minutes" min="0"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="estimated_blood_loss_ml" class="block text-sm font-medium text-gray-700">Estimated Blood Loss (mL)</label>
+                            <input type="number" id="estimated_blood_loss_ml" name="estimated_blood_loss_ml" min="0"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="discharge_date" class="block text-sm font-medium text-gray-700">Discharge Date</label>
+                            <input type="date" id="discharge_date" name="discharge_date"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tumor Information -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Tumor Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="tumor_location" class="block text-sm font-medium text-gray-700">Tumor Location</label>
+                            <input type="text" id="tumor_location" name="tumor_location" placeholder="Select anatomical location or enter custom"
+                                   data-anatomical-selector
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="laterality" class="block text-sm font-medium text-gray-700">Laterality</label>
+                            <select id="laterality" name="laterality"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Laterality</option>
+                                <option value="Left">Left</option>
+                                <option value="Right">Right</option>
+                                <option value="Bilateral">Bilateral</option>
+                                <option value="Midline">Midline</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="preop_tumor_size" class="block text-sm font-medium text-gray-700">Preop Tumor Size</label>
+                            <input type="text" id="preop_tumor_size" name="preop_tumor_size" placeholder="e.g., 4.2 x 3.1 x 2.8 cm"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="preop_imaging_date" class="block text-sm font-medium text-gray-700">Preop Imaging Date</label>
+                            <input type="date" id="preop_imaging_date" name="preop_imaging_date"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clinical Notes -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Clinical Notes</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="procedure_details" class="block text-sm font-medium text-gray-700">Procedure Details</label>
+                            <textarea id="procedure_details" name="procedure_details" rows="3" placeholder="Describe the surgical procedure..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="complications" class="block text-sm font-medium text-gray-700">Complications</label>
+                            <textarea id="complications" name="complications" rows="3" placeholder="Any complications during or after surgery..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="postop_findings" class="block text-sm font-medium text-gray-700">Postoperative Findings</label>
+                            <textarea id="postop_findings" name="postop_findings" rows="3" placeholder="Postoperative imaging and clinical findings..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700">Additional Notes</label>
+                            <textarea id="notes" name="notes" rows="3" placeholder="Any additional notes or observations..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelSurgeryBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitSurgeryBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Create Surgery
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<div id="surgeryMessageContainer" class="fixed top-4 right-4 z-50 hidden">
+    <div id="surgeryMessageAlert" class="max-w-sm mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+        <span id="surgeryMessageText" class="block sm:inline"></span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <svg id="closeSurgeryMessage" class="fill-current h-6 w-6 text-green-500 cursor-pointer" role="button" viewBox="0 0 20 20">
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+        </span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/anatomical_locations.js"></script>
+<script>
+// Surgery Modal functionality
+const surgeryModal = document.getElementById('surgeryModal');
+const addSurgeryBtn = document.getElementById('addSurgeryBtn');
+const addFirstSurgeryBtn = document.getElementById('addFirstSurgeryBtn');
+const closeSurgeryModal = document.getElementById('closeSurgeryModal');
+const cancelSurgeryBtn = document.getElementById('cancelSurgeryBtn');
+const surgeryForm = document.getElementById('surgeryForm');
+
+// Load patients for dropdown
+async function loadPatients() {
+    try {
+        const response = await fetch('/api/patients');
+        const data = await response.json();
+        const patientSelect = document.getElementById('patient_id');
+
+        // Clear existing options (except first one)
+        patientSelect.innerHTML = '<option value="">Select Patient</option>';
+
+        // Add patient options
+        data.patients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.name} (${patient.mrn})`;
+            patientSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading patients:', error);
+        showSurgeryMessage('Error loading patients', 'error');
+    }
+}
+
+// Open modal
+function openSurgeryModal() {
+    loadPatients();
+    surgeryModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close modal
+function closeSurgeryModalFunc() {
+    surgeryModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    surgeryForm.reset();
+}
+
+// Event listeners
+if (addSurgeryBtn) {
+    addSurgeryBtn.addEventListener('click', openSurgeryModal);
+}
+
+if (addFirstSurgeryBtn) {
+    addFirstSurgeryBtn.addEventListener('click', openSurgeryModal);
+}
+
+closeSurgeryModal.addEventListener('click', closeSurgeryModalFunc);
+cancelSurgeryBtn.addEventListener('click', closeSurgeryModalFunc);
+
+// Close modal when clicking outside
+surgeryModal.addEventListener('click', function(e) {
+    if (e.target === surgeryModal) {
+        closeSurgeryModalFunc();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !surgeryModal.classList.contains('hidden')) {
+        closeSurgeryModalFunc();
+    }
+});
+
+// Form submission
+surgeryForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitSurgeryBtn');
+    const originalText = submitBtn.textContent;
+
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+
+    try {
+        // Collect form data
+        const formData = new FormData(surgeryForm);
+        const surgeryData = {};
+
+        // Convert FormData to object, handling empty values
+        for (const [key, value] of formData.entries()) {
+            if (value.trim() !== '') {
+                // Convert numeric fields
+                if (key === 'patient_id' || key === 'operative_time_minutes' || key === 'estimated_blood_loss_ml') {
+                    surgeryData[key] = parseInt(value);
+                } else {
+                    surgeryData[key] = value;
+                }
+            }
+        }
+
+        // Send POST request
+        const response = await fetch('/api/surgeries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(surgeryData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Success
+            showSurgeryMessage(result.message || 'Surgery created successfully!', 'success');
+            closeSurgeryModalFunc();
+
+            // Reload the page to show the new surgery
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            // Error
+            showSurgeryMessage(result.detail || 'Error creating surgery', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showSurgeryMessage('Network error occurred. Please try again.', 'error');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Message display function
+function showSurgeryMessage(message, type = 'success') {
+    const messageContainer = document.getElementById('surgeryMessageContainer');
+    const messageAlert = document.getElementById('surgeryMessageAlert');
+    const messageText = document.getElementById('surgeryMessageText');
+
+    // Set message text
+    messageText.textContent = message;
+
+    // Set message type styling
+    if (type === 'error') {
+        messageAlert.className = 'max-w-sm mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+    } else {
+        messageAlert.className = 'max-w-sm mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative';
+    }
+
+    // Show message
+    messageContainer.classList.remove('hidden');
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        messageContainer.classList.add('hidden');
+    }, 5000);
+}
+
+// Close message manually
+document.getElementById('closeSurgeryMessage').addEventListener('click', function() {
+    document.getElementById('surgeryMessageContainer').classList.add('hidden');
+});
+</script>
 {% endblock %}

@@ -38,6 +38,16 @@ class MGMTStatus(PyEnum):
     UNMETHYLATED = "unmethylated"
     UNKNOWN = "unknown"
 
+class ATRXStatus(PyEnum):
+    RETAINED = "retained"
+    LOST = "lost"
+    UNKNOWN = "unknown"
+
+class CodeletionStatus(PyEnum):
+    PRESENT = "present"
+    ABSENT = "absent"
+    UNKNOWN = "unknown"
+
 class SurgeryType(PyEnum):
     BIOPSY = "biopsy"
     PARTIAL_RESECTION = "partial_resection"
@@ -164,6 +174,8 @@ class Pathology(BaseModel):
 
     idh_status = Column(Enum(IDHStatus))
     mgmt_status = Column(Enum(MGMTStatus))
+    atrx_status = Column(Enum(ATRXStatus))
+    codeletion_1p19q_status = Column(Enum(CodeletionStatus))
     p53_mutation = Column(String(100))
     egfr_amplification = Column(Boolean)
     ki67_index = Column(Integer)

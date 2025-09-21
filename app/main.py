@@ -11,9 +11,50 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from .database import get_db, init_db
-from .models import Patient, Surgery, Pathology, Treatment, FollowUpVisit, Gender, SurgeryType, WHOGrade, IDHStatus, MGMTStatus, TreatmentType, TreatmentStatus, NeurologicalStatus, ECOGScore
+from .models import Patient, Surgery, Pathology, Treatment, FollowUpVisit, Gender, SurgeryType, WHOGrade, IDHStatus, MGMTStatus, ATRXStatus, CodeletionStatus, TreatmentType, TreatmentStatus, NeurologicalStatus, ECOGScore
 
 app = FastAPI(title="GBM Tracker", description="Glioblastoma Multiforme Patient Tracking System")
+
+# Pydantic models for Patient CRUD operations
+class PatientCreate(BaseModel):
+    medical_record_number: str
+    first_name: str
+    last_name: str
+    date_of_birth: date
+    gender: Gender
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    initial_diagnosis_date: Optional[date] = None
+    primary_location: Optional[str] = None
+    referring_physician: Optional[str] = None
+    insurance_info: Optional[str] = None
+    medical_history: Optional[str] = None
+    family_history: Optional[str] = None
+    current_medications: Optional[str] = None
+    allergies: Optional[str] = None
+    notes: Optional[str] = None
+
+class PatientUpdate(BaseModel):
+    medical_record_number: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    gender: Optional[Gender] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    initial_diagnosis_date: Optional[date] = None
+    primary_location: Optional[str] = None
+    referring_physician: Optional[str] = None
+    insurance_info: Optional[str] = None
+    medical_history: Optional[str] = None
+    family_history: Optional[str] = None
+    current_medications: Optional[str] = None
+    allergies: Optional[str] = None
+    notes: Optional[str] = None
 
 # Pydantic models for Surgery CRUD operations
 class SurgeryCreate(BaseModel):
@@ -64,6 +105,8 @@ class PathologyCreate(BaseModel):
     microvascular_proliferation: Optional[bool] = None
     idh_status: Optional[IDHStatus] = None
     mgmt_status: Optional[MGMTStatus] = None
+    atrx_status: Optional[ATRXStatus] = None
+    codeletion_1p19q_status: Optional[CodeletionStatus] = None
     p53_mutation: Optional[str] = None
     egfr_amplification: Optional[bool] = None
     ki67_index: Optional[int] = None
@@ -83,6 +126,8 @@ class PathologyUpdate(BaseModel):
     microvascular_proliferation: Optional[bool] = None
     idh_status: Optional[IDHStatus] = None
     mgmt_status: Optional[MGMTStatus] = None
+    atrx_status: Optional[ATRXStatus] = None
+    codeletion_1p19q_status: Optional[CodeletionStatus] = None
     p53_mutation: Optional[str] = None
     egfr_amplification: Optional[bool] = None
     ki67_index: Optional[int] = None
@@ -277,6 +322,72 @@ async def api_get_patient(patient_id: int, db: Session = Depends(get_db)):
         "referring_physician": patient.referring_physician,
         "created_at": patient.created_at.isoformat() if patient.created_at else None
     }
+
+# Patient CREATE, UPDATE, DELETE operations
+
+@app.post("/api/patients")
+async def api_create_patient(patient_data: PatientCreate, db: Session = Depends(get_db)):
+    # Check if medical record number already exists
+    existing_patient = db.query(Patient).filter(Patient.medical_record_number == patient_data.medical_record_number).first()
+    if existing_patient:
+        raise HTTPException(status_code=400, detail="Patient with this medical record number already exists")
+
+    # Create new patient
+    patient = Patient(**patient_data.dict())
+    db.add(patient)
+    db.commit()
+    db.refresh(patient)
+
+    return {
+        "id": patient.id,
+        "medical_record_number": patient.medical_record_number,
+        "first_name": patient.first_name,
+        "last_name": patient.last_name,
+        "date_of_birth": patient.date_of_birth.isoformat(),
+        "gender": patient.gender.value,
+        "message": "Patient created successfully"
+    }
+
+@app.put("/api/patients/{patient_id}")
+async def api_update_patient(patient_id: int, patient_data: PatientUpdate, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    # Check if medical record number already exists (if being updated)
+    if patient_data.medical_record_number and patient_data.medical_record_number != patient.medical_record_number:
+        existing_patient = db.query(Patient).filter(Patient.medical_record_number == patient_data.medical_record_number).first()
+        if existing_patient:
+            raise HTTPException(status_code=400, detail="Patient with this medical record number already exists")
+
+    # Update only provided fields
+    update_data = patient_data.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(patient, field, value)
+
+    db.commit()
+    db.refresh(patient)
+
+    return {
+        "id": patient.id,
+        "medical_record_number": patient.medical_record_number,
+        "first_name": patient.first_name,
+        "last_name": patient.last_name,
+        "date_of_birth": patient.date_of_birth.isoformat() if patient.date_of_birth else None,
+        "gender": patient.gender.value if patient.gender else None,
+        "message": "Patient updated successfully"
+    }
+
+@app.delete("/api/patients/{patient_id}")
+async def api_delete_patient(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    db.delete(patient)
+    db.commit()
+
+    return {"message": f"Patient {patient_id} deleted successfully"}
 
 # Patient Timeline View
 
@@ -1004,6 +1115,8 @@ async def api_get_pathology(pathology_id: int, db: Session = Depends(get_db)):
         "microvascular_proliferation": pathology.microvascular_proliferation,
         "idh_status": pathology.idh_status.value if pathology.idh_status else None,
         "mgmt_status": pathology.mgmt_status.value if pathology.mgmt_status else None,
+        "atrx_status": pathology.atrx_status.value if pathology.atrx_status else None,
+        "codeletion_1p19q_status": pathology.codeletion_1p19q_status.value if pathology.codeletion_1p19q_status else None,
         "p53_mutation": pathology.p53_mutation,
         "egfr_amplification": pathology.egfr_amplification,
         "ki67_index": pathology.ki67_index,
@@ -1446,10 +1559,10 @@ async def get_reports(
 
     if idh_status and idh_status != "all":
         if idh_status == "wild_type":
-            query = query.filter(Pathology.idh_status == IDHStatus.WILD_TYPE)
+            query = query.filter(Pathology.idh_status == IDHStatus.WILDTYPE)
             filters_applied.append(f"IDH: Wild-type")
         elif idh_status == "mutated":
-            query = query.filter(Pathology.idh_status == IDHStatus.MUTATED)
+            query = query.filter(Pathology.idh_status == IDHStatus.MUTANT)
             filters_applied.append(f"IDH: Mutated")
 
     if mgmt_status and mgmt_status != "all":
@@ -1611,9 +1724,9 @@ async def export_reports(
     # Apply filters (same logic as get_reports)
     if idh_status and idh_status != "all":
         if idh_status == "wild_type":
-            query = query.filter(Pathology.idh_status == IDHStatus.WILD_TYPE)
+            query = query.filter(Pathology.idh_status == IDHStatus.WILDTYPE)
         elif idh_status == "mutated":
-            query = query.filter(Pathology.idh_status == IDHStatus.MUTATED)
+            query = query.filter(Pathology.idh_status == IDHStatus.MUTANT)
 
     if mgmt_status and mgmt_status != "all":
         if mgmt_status == "methylated":

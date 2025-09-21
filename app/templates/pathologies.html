@@ -7,7 +7,7 @@
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
         <div class="flex space-x-3">
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+            <button id="addPathologyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
@@ -212,7 +212,7 @@
     <p class="text-gray-500 mb-6 max-w-md mx-auto">
         No pathology reports have been recorded in the system yet. Start by adding pathology results for your patients.
     </p>
-    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
+    <button id="addFirstPathologyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
         </svg>
@@ -220,4 +220,457 @@
     </button>
 </div>
 {% endif %}
+
+<!-- Pathology Creation Modal -->
+<div id="pathologyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Add New Pathology Report</h3>
+                <button id="closePathologyModal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="pathologyForm" class="space-y-6">
+                <!-- Patient and Surgery Selection -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Patient Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patient_id" class="block text-sm font-medium text-gray-700">Patient *</label>
+                            <select id="patient_id" name="patient_id" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Patient</option>
+                                <!-- Patients will be loaded dynamically -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="surgery_id" class="block text-sm font-medium text-gray-700">Related Surgery (Optional)</label>
+                            <select id="surgery_id" name="surgery_id"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select Surgery (Optional)</option>
+                                <!-- Surgeries will be loaded based on patient selection -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Pathology Information -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Basic Pathology Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="specimen_date" class="block text-sm font-medium text-gray-700">Specimen Date *</label>
+                            <input type="date" id="specimen_date" name="specimen_date" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="pathologist_name" class="block text-sm font-medium text-gray-700">Pathologist Name</label>
+                            <input type="text" id="pathologist_name" name="pathologist_name"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label for="histologic_diagnosis" class="block text-sm font-medium text-gray-700">Histologic Diagnosis *</label>
+                            <input type="text" id="histologic_diagnosis" name="histologic_diagnosis" required
+                                   placeholder="e.g., Glioblastoma multiforme, WHO Grade IV"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GBM Molecular Profiling -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">GBM Molecular Profiling</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="who_grade" class="block text-sm font-medium text-gray-700">WHO Grade</label>
+                            <select id="who_grade" name="who_grade"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select WHO Grade</option>
+                                <option value="I">Grade I</option>
+                                <option value="II">Grade II</option>
+                                <option value="III">Grade III</option>
+                                <option value="IV">Grade IV</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="idh_status" class="block text-sm font-medium text-gray-700">IDH Status</label>
+                            <select id="idh_status" name="idh_status"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select IDH Status</option>
+                                <option value="wildtype">Wild-type</option>
+                                <option value="mutant">Mutant</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="mgmt_status" class="block text-sm font-medium text-gray-700">MGMT Status</label>
+                            <select id="mgmt_status" name="mgmt_status"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select MGMT Status</option>
+                                <option value="methylated">Methylated</option>
+                                <option value="unmethylated">Unmethylated</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="atrx_status" class="block text-sm font-medium text-gray-700">ATRX Status</label>
+                            <select id="atrx_status" name="atrx_status"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select ATRX Status</option>
+                                <option value="retained">Retained</option>
+                                <option value="lost">Lost</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="codeletion_1p19q_status" class="block text-sm font-medium text-gray-700">1p/19q Codeletion</label>
+                            <select id="codeletion_1p19q_status" name="codeletion_1p19q_status"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select 1p/19q Status</option>
+                                <option value="present">Present</option>
+                                <option value="absent">Absent</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="ki67_index" class="block text-sm font-medium text-gray-700">Ki-67 Percentage</label>
+                            <input type="number" id="ki67_index" name="ki67_index" min="0" max="100" step="0.1"
+                                   placeholder="e.g., 25.5"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histopathological Features -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Histopathological Features</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="tumor_cellularity_percent" class="block text-sm font-medium text-gray-700">Tumor Cellularity (%)</label>
+                            <input type="number" id="tumor_cellularity_percent" name="tumor_cellularity_percent" min="0" max="100"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="necrosis_present" class="block text-sm font-medium text-gray-700">Necrosis Present</label>
+                            <select id="necrosis_present" name="necrosis_present"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="microvascular_proliferation" class="block text-sm font-medium text-gray-700">Microvascular Proliferation</label>
+                            <select id="microvascular_proliferation" name="microvascular_proliferation"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Molecular Markers -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Additional Molecular Markers</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="p53_mutation" class="block text-sm font-medium text-gray-700">p53 Mutation</label>
+                            <input type="text" id="p53_mutation" name="p53_mutation"
+                                   placeholder="e.g., R273H, Wild-type"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="egfr_amplification" class="block text-sm font-medium text-gray-700">EGFR Amplification</label>
+                            <select id="egfr_amplification" name="egfr_amplification"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select</option>
+                                <option value="true">Present</option>
+                                <option value="false">Absent</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Reports -->
+                <div class="border-b pb-4">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Detailed Reports</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="molecular_markers" class="block text-sm font-medium text-gray-700">Molecular Markers Summary</label>
+                            <textarea id="molecular_markers" name="molecular_markers" rows="3"
+                                      placeholder="Summary of all molecular testing results..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="immunohistochemistry_results" class="block text-sm font-medium text-gray-700">Immunohistochemistry Results</label>
+                            <textarea id="immunohistochemistry_results" name="immunohistochemistry_results" rows="3"
+                                      placeholder="IHC staining results and interpretation..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="genetic_testing_results" class="block text-sm font-medium text-gray-700">Genetic Testing Results</label>
+                            <textarea id="genetic_testing_results" name="genetic_testing_results" rows="3"
+                                      placeholder="NGS, sequencing, and other genetic testing results..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="pathology_report" class="block text-sm font-medium text-gray-700">Full Pathology Report</label>
+                            <textarea id="pathology_report" name="pathology_report" rows="4"
+                                      placeholder="Complete pathology report text..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700">Additional Notes</label>
+                            <textarea id="notes" name="notes" rows="3"
+                                      placeholder="Any additional notes or observations..."
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelPathologyBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitPathologyBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Create Pathology Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<div id="pathologyMessageContainer" class="fixed top-4 right-4 z-50 hidden">
+    <div id="pathologyMessageAlert" class="max-w-sm mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+        <span id="pathologyMessageText" class="block sm:inline"></span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <svg id="closePathologyMessage" class="fill-current h-6 w-6 text-green-500 cursor-pointer" role="button" viewBox="0 0 20 20">
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+        </span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Pathology Modal functionality
+const pathologyModal = document.getElementById('pathologyModal');
+const addPathologyBtn = document.getElementById('addPathologyBtn');
+const addFirstPathologyBtn = document.getElementById('addFirstPathologyBtn');
+const closePathologyModal = document.getElementById('closePathologyModal');
+const cancelPathologyBtn = document.getElementById('cancelPathologyBtn');
+const pathologyForm = document.getElementById('pathologyForm');
+
+// Load patients and surgeries for dropdowns
+async function loadPatients() {
+    try {
+        const response = await fetch('/api/patients');
+        const data = await response.json();
+        const patientSelect = document.getElementById('patient_id');
+
+        // Clear existing options (except first one)
+        patientSelect.innerHTML = '<option value="">Select Patient</option>';
+
+        // Add patient options
+        data.patients.forEach(patient => {
+            const option = document.createElement('option');
+            option.value = patient.id;
+            option.textContent = `${patient.name} (${patient.mrn})`;
+            patientSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading patients:', error);
+        showPathologyMessage('Error loading patients', 'error');
+    }
+}
+
+async function loadSurgeries(patientId) {
+    try {
+        const surgerySelect = document.getElementById('surgery_id');
+        surgerySelect.innerHTML = '<option value="">Select Surgery (Optional)</option>';
+
+        if (!patientId) return;
+
+        const response = await fetch(`/api/surgeries?patient_id=${patientId}`);
+        const data = await response.json();
+
+        if (data.surgeries && data.surgeries.length > 0) {
+            data.surgeries.forEach(surgery => {
+                const option = document.createElement('option');
+                option.value = surgery.id;
+                option.textContent = `${surgery.surgery_type} - ${surgery.surgery_date}`;
+                surgerySelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading surgeries:', error);
+    }
+}
+
+// Patient selection change handler
+document.getElementById('patient_id').addEventListener('change', function(e) {
+    loadSurgeries(e.target.value);
+});
+
+// Open modal
+function openPathologyModal() {
+    loadPatients();
+    pathologyModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close modal
+function closePathologyModalFunc() {
+    pathologyModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    pathologyForm.reset();
+}
+
+// Event listeners
+if (addPathologyBtn) {
+    addPathologyBtn.addEventListener('click', openPathologyModal);
+}
+
+if (addFirstPathologyBtn) {
+    addFirstPathologyBtn.addEventListener('click', openPathologyModal);
+}
+
+closePathologyModal.addEventListener('click', closePathologyModalFunc);
+cancelPathologyBtn.addEventListener('click', closePathologyModalFunc);
+
+// Close modal when clicking outside
+pathologyModal.addEventListener('click', function(e) {
+    if (e.target === pathologyModal) {
+        closePathologyModalFunc();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !pathologyModal.classList.contains('hidden')) {
+        closePathologyModalFunc();
+    }
+});
+
+// Form submission
+pathologyForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitPathologyBtn');
+    const originalText = submitBtn.textContent;
+
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+
+    try {
+        // Collect form data
+        const formData = new FormData(pathologyForm);
+        const pathologyData = {};
+
+        // Convert FormData to object, handling empty values and data types
+        for (const [key, value] of formData.entries()) {
+            if (value.trim() !== '') {
+                // Convert specific field types
+                if (key === 'patient_id' || key === 'surgery_id' || key === 'tumor_cellularity_percent' || key === 'ki67_index') {
+                    pathologyData[key] = parseInt(value);
+                } else if (key === 'necrosis_present' || key === 'microvascular_proliferation' || key === 'egfr_amplification') {
+                    pathologyData[key] = value === 'true';
+                } else {
+                    pathologyData[key] = value;
+                }
+            }
+        }
+
+        // Send POST request
+        const response = await fetch('/api/pathologies', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(pathologyData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Success
+            showPathologyMessage(result.message || 'Pathology report created successfully!', 'success');
+            closePathologyModalFunc();
+
+            // Reload the page to show the new pathology
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            // Error
+            showPathologyMessage(result.detail || 'Error creating pathology report', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showPathologyMessage('Network error occurred. Please try again.', 'error');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Message display function
+function showPathologyMessage(message, type = 'success') {
+    const messageContainer = document.getElementById('pathologyMessageContainer');
+    const messageAlert = document.getElementById('pathologyMessageAlert');
+    const messageText = document.getElementById('pathologyMessageText');
+
+    // Set message text
+    messageText.textContent = message;
+
+    // Set message type styling
+    if (type === 'error') {
+        messageAlert.className = 'max-w-sm mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+    } else {
+        messageAlert.className = 'max-w-sm mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative';
+    }
+
+    // Show message
+    messageContainer.classList.remove('hidden');
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        messageContainer.classList.add('hidden');
+    }, 5000);
+}
+
+// Close message manually
+document.getElementById('closePathologyMessage').addEventListener('click', function() {
+    document.getElementById('pathologyMessageContainer').classList.add('hidden');
+});
+</script>
 {% endblock %}
