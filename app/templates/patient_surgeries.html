@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - GBM Tracker{% endblock %}
+
+{% block content %}
+<!-- Patient Header -->
+<div class="mb-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ title }}</h1>
+            <p class="text-lg text-gray-600">
+                <a href="/patients/{{ patient.id }}" class="text-blue-600 hover:text-blue-800">
+                    {{ patient.first_name }} {{ patient.last_name }}
+                </a>
+                ({{ patient.medical_record_number }})
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/patients/{{ patient.id }}/timeline" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Timeline</span>
+            </a>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Add Surgery
+            </button>
+            <a href="/patients/{{ patient.id }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Back to Patient
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if surgeries %}
+<!-- Surgery Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Total Surgeries</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ surgeries|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">First Surgery</dt>
+                    <dd class="text-lg font-medium text-gray-900">
+                        {% if surgeries %}
+                            {{ surgeries|sort(attribute='surgery_date')|first.surgery_date.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 {% if surgeries|selectattr('complications')|rejectattr('complications', 'equalto', 'None')|list %}bg-red-500{% else %}bg-green-500{% endif %} rounded-full flex items-center justify-center">
+                    {% if surgeries|selectattr('complications')|rejectattr('complications', 'equalto', 'None')|list %}
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {% else %}
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Complications</dt>
+                    <dd class="text-lg font-medium text-gray-900">
+                        {% if surgeries|selectattr('complications')|rejectattr('complications', 'equalto', 'None')|list %}
+                            Yes
+                        {% else %}
+                            None
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Surgery Timeline -->
+<div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Surgery Timeline</h3>
+    </div>
+    <div class="p-6">
+        <div class="flow-root">
+            <ul class="-mb-8">
+                {% for surgery in surgeries|sort(attribute='surgery_date') %}
+                <li>
+                    <div class="relative pb-8">
+                        {% if not loop.last %}
+                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                        {% endif %}
+                        <div class="relative flex space-x-3">
+                            <div>
+                                <span class="h-8 w-8 rounded-full
+                                    {% if surgery.surgery_type.value == 'gross_total_resection' %}bg-green-500
+                                    {% elif surgery.surgery_type.value == 'subtotal_resection' %}bg-blue-500
+                                    {% elif surgery.surgery_type.value == 'partial_resection' %}bg-yellow-500
+                                    {% else %}bg-gray-500{% endif %}
+                                    flex items-center justify-center ring-8 ring-white">
+                                    <svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                <div>
+                                    <p class="text-sm text-gray-500">
+                                        <a href="/surgeries/{{ surgery.id }}" class="font-medium text-gray-900 hover:text-blue-600">
+                                            {{ surgery.surgery_type.value.replace('_', ' ').title() }}
+                                        </a>
+                                        performed by {{ surgery.surgeon_name }}
+                                    </p>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Extent of resection: {{ surgery.extent_of_resection or "Not specified" }}
+                                    </p>
+                                    {% if surgery.complications and surgery.complications != "None" %}
+                                    <p class="mt-1 text-sm text-red-600">
+                                        Complications: {{ surgery.complications }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                    <time>{{ surgery.surgery_date.strftime('%b %d, %Y') if surgery.surgery_date else "Unknown date" }}</time>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Surgery Details Table -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Surgery Details</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Procedure</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Surgeon</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Extent</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for surgery in surgeries|sort(attribute='surgery_date', reverse=true) %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ surgery.surgery_date.strftime('%Y-%m-%d') if surgery.surgery_date else "Not specified" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                            {% if surgery.surgery_type.value == 'gross_total_resection' %}bg-green-100 text-green-800
+                            {% elif surgery.surgery_type.value == 'subtotal_resection' %}bg-blue-100 text-blue-800
+                            {% elif surgery.surgery_type.value == 'partial_resection' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ surgery.surgery_type.value.replace('_', ' ').title() if surgery.surgery_type else "Unknown" }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ surgery.surgeon_name or "Not specified" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ surgery.extent_of_resection or "Not specified" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {% if surgery.operative_time_minutes %}
+                            {{ surgery.operative_time_minutes }} min
+                        {% else %}
+                            Not specified
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="/surgeries/{{ surgery.id }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
+                        <button class="text-gray-600 hover:text-gray-900">Edit</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-12">
+    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z"/>
+        </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No Surgeries Found</h3>
+    <p class="text-gray-500 mb-6 max-w-md mx-auto">
+        This patient has no recorded surgical procedures. Add a surgery record to track their treatment history.
+    </p>
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        <span>Add First Surgery</span>
+    </button>
+</div>
+{% endif %}
+{% endblock %}

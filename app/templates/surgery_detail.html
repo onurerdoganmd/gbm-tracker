@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - GBM Tracker{% endblock %}
+
+{% block content %}
+<!-- Surgery Header -->
+<div class="mb-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ title }}</h1>
+            <p class="text-lg text-gray-600">
+                Patient:
+                <a href="/patients/{{ surgery.patient.id }}" class="text-blue-600 hover:text-blue-800">
+                    {{ surgery.patient.first_name }} {{ surgery.patient.last_name }}
+                </a>
+                ({{ surgery.patient.medical_record_number }})
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Edit Surgery
+            </button>
+            <a href="/surgeries" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Back to Surgeries
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Surgery Overview Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Surgery Date</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ surgery.surgery_date.strftime('%Y-%m-%d') if surgery.surgery_date else "Not specified" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Procedure Type</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ surgery.surgery_type.value.replace('_', ' ').title() if surgery.surgery_type else "Not specified" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Extent of Resection</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ surgery.extent_of_resection or "Not specified" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 {% if surgery.complications and surgery.complications != 'None' %}bg-red-500{% else %}bg-green-500{% endif %} rounded-full flex items-center justify-center">
+                    {% if surgery.complications and surgery.complications != "None" %}
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {% else %}
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Complications</dt>
+                    <dd class="text-lg font-medium text-gray-900">
+                        {% if surgery.complications and surgery.complications != "None" %}Yes{% else %}None{% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Surgery Details -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Basic Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Surgery Date:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.surgery_date.strftime('%Y-%m-%d') if surgery.surgery_date else "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Surgeon:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.surgeon_name or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Hospital:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.hospital or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Discharge Date:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.discharge_date.strftime('%Y-%m-%d') if surgery.discharge_date else "Not specified" }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Tumor Details -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Tumor Details</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Location:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.tumor_location or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Laterality:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.laterality or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Preop Size:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.preop_tumor_size or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Preop Imaging:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.preop_imaging_date.strftime('%Y-%m-%d') if surgery.preop_imaging_date else "Not specified" }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Operative Details -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Operative Details</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Operative Time:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.operative_time_minutes }} minutes</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Blood Loss:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.estimated_blood_loss_ml }} mL</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Extent of Resection:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.extent_of_resection or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Complications:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.complications or "None" }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Postoperative -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Postoperative</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Postop Imaging:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.postop_imaging_date.strftime('%Y-%m-%d') if surgery.postop_imaging_date else "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Created:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.created_at.strftime('%Y-%m-%d %H:%M') if surgery.created_at else "Unknown" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Last Updated:</dt>
+                <dd class="text-sm text-gray-900">{{ surgery.updated_at.strftime('%Y-%m-%d %H:%M') if surgery.updated_at else "Unknown" }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+<!-- Detailed Sections -->
+{% if surgery.procedure_details %}
+<div class="mt-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Procedure Details</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ surgery.procedure_details }}</div>
+    </div>
+</div>
+{% endif %}
+
+{% if surgery.postop_findings %}
+<div class="mt-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Postoperative Findings</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ surgery.postop_findings }}</div>
+    </div>
+</div>
+{% endif %}
+
+{% if surgery.notes %}
+<div class="mt-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Notes</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ surgery.notes }}</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Related Records -->
+<div class="mt-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Related Records</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="/patients/{{ surgery.patient.id }}" class="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-blue-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Patient Record</p>
+                        <p class="text-sm text-gray-500">View patient details</p>
+                    </div>
+                </div>
+            </a>
+
+            {% if surgery.pathology %}
+            <a href="/pathologies/{{ surgery.pathology.id }}" class="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Pathology Report</p>
+                        <p class="text-sm text-gray-500">View pathology results</p>
+                    </div>
+                </div>
+            </a>
+            {% endif %}
+
+            <a href="/patients/{{ surgery.patient.id }}/surgeries" class="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-purple-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">All Patient Surgeries</p>
+                        <p class="text-sm text-gray-500">View surgical history</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

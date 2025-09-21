@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}GBM Tracker - Glioblastoma Patient Management{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="text-center py-12 mb-12">
+    <div class="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+        <svg class="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" clip-rule="evenodd"/>
+        </svg>
+    </div>
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">GBM Tracker</h1>
+    <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+        Comprehensive Glioblastoma Multiforme patient management system for healthcare professionals
+    </p>
+
+    <div class="flex flex-wrap justify-center gap-4">
+        <a href="/patients" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+            <span>View All Patients</span>
+        </a>
+        <a href="/api/patients" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+            </svg>
+            <span>API Access</span>
+        </a>
+        <a href="/hello" class="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg transition-colors duration-200">
+            Test Connection
+        </a>
+    </div>
+</div>
+
+<!-- Features Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    <div class="bg-white rounded-lg shadow p-6 hover-lift">
+        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Patient Demographics</h3>
+        <p class="text-gray-600">Comprehensive patient information management including personal details, contact information, and medical history.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 hover-lift">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Surgery Records</h3>
+        <p class="text-gray-600">Detailed surgical procedure tracking including operative notes, complications, and post-operative outcomes.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 hover-lift">
+        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Pathology Data</h3>
+        <p class="text-gray-600">WHO grading, molecular markers (IDH, MGMT), immunohistochemistry results, and genetic testing data.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 hover-lift">
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Treatment Monitoring</h3>
+        <p class="text-gray-600">Track radiation therapy, chemotherapy protocols, targeted therapies, and treatment responses.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 hover-lift">
+        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Follow-up Visits</h3>
+        <p class="text-gray-600">Regular monitoring visits, imaging studies, neurological assessments, and progression tracking.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6 hover-lift">
+        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" clip-rule="evenodd"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Data Analytics</h3>
+        <p class="text-gray-600">Comprehensive reporting and analytics for research, quality improvement, and clinical decision support.</p>
+    </div>
+</div>
+
+<!-- System Status -->
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">System Status</h3>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <span class="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+            Operational
+        </span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center">
+            <div class="text-2xl font-bold text-gray-900">0</div>
+            <div class="text-sm text-gray-600">Total Patients</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-gray-900">SQLite</div>
+            <div class="text-sm text-gray-600">Database</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-gray-900">FastAPI</div>
+            <div class="text-sm text-gray-600">Backend</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

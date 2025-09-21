@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GBM Tracker{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS for medical theme -->
+    <style>
+        .medical-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .hover-lift {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .medical-blue {
+            background-color: #1e40af;
+        }
+
+        .medical-blue:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="medical-gradient shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <span class="text-white text-xl font-bold">GBM Tracker</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        Home
+                    </a>
+                    <a href="/patients" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        Patients
+                    </a>
+                    <a href="/surgeries" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        Surgeries
+                    </a>
+                    <a href="/pathologies" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        Pathology
+                    </a>
+                    <a href="/reports" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        Reports
+                    </a>
+                    <a href="/api/patients" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        API
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <p class="text-gray-500 text-sm">
+                    &copy; 2025 GBM Tracker. Glioblastoma Multiforme Patient Management System.
+                </p>
+                <div class="flex space-x-4">
+                    <span class="text-gray-400 text-xs">
+                        Built with FastAPI & Tailwind CSS
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

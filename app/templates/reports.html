@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Cohort Reports - GBM Tracker{% endblock %}
+
+{% block extra_head %}
+<style>
+.filter-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.filter-select, .filter-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+.filter-select:focus, .filter-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.stat-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #3b82f6;
+    margin-bottom: 8px;
+}
+
+.stat-breakdown {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.cohort-table {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
+    background: #f9fafb;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-controls {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    gap: 16px;
+}
+
+.results-count {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.export-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.export-btn:hover {
+    background: #047857;
+}
+
+.patient-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.patient-table th {
+    background: #f9fafb;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.patient-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.patient-table tr:hover {
+    background: #f9fafb;
+}
+
+.patient-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.patient-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.molecular-marker {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.idh-wild-type {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.idh-mutated {
+    background: #f0f9ff;
+    color: #2563eb;
+}
+
+.mgmt-methylated {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.mgmt-unmethylated {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.unknown-status {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.filter-tag {
+    background: #3b82f6;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.age-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.age-range-inputs input {
+    width: 80px;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.empty-state-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    color: #d1d5db;
+}
+
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .patient-table {
+        font-size: 12px;
+    }
+
+    .patient-table th,
+    .patient-table td {
+        padding: 8px 12px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Patient Cohort Reports</h1>
+    <p class="text-gray-600 mt-2">Filter and analyze GBM patient cohorts by molecular markers, demographics, and clinical characteristics.</p>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Cohort Filters</h2>
+
+    <form method="get" action="/reports">
+        <div class="filter-grid">
+            <!-- IDH Status Filter -->
+            <div class="filter-group">
+                <label class="filter-label">IDH Status</label>
+                <select name="idh_status" class="filter-select">
+                    <option value="all" {% if not current_filters.idh_status or current_filters.idh_status == "all" %}selected{% endif %}>All IDH Status</option>
+                    <option value="wild_type" {% if current_filters.idh_status == "wild_type" %}selected{% endif %}>IDH Wild-type</option>
+                    <option value="mutated" {% if current_filters.idh_status == "mutated" %}selected{% endif %}>IDH Mutated</option>
+                </select>
+            </div>
+
+            <!-- MGMT Status Filter -->
+            <div class="filter-group">
+                <label class="filter-label">MGMT Status</label>
+                <select name="mgmt_status" class="filter-select">
+                    <option value="all" {% if not current_filters.mgmt_status or current_filters.mgmt_status == "all" %}selected{% endif %}>All MGMT Status</option>
+                    <option value="methylated" {% if current_filters.mgmt_status == "methylated" %}selected{% endif %}>MGMT Methylated</option>
+                    <option value="unmethylated" {% if current_filters.mgmt_status == "unmethylated" %}selected{% endif %}>MGMT Unmethylated</option>
+                </select>
+            </div>
+
+            <!-- WHO Grade Filter -->
+            <div class="filter-group">
+                <label class="filter-label">WHO Grade</label>
+                <select name="who_grade" class="filter-select">
+                    <option value="all" {% if not current_filters.who_grade or current_filters.who_grade == "all" %}selected{% endif %}>All Grades</option>
+                    <option value="grade_4" {% if current_filters.who_grade == "grade_4" %}selected{% endif %}>Grade IV</option>
+                </select>
+            </div>
+
+            <!-- Age Range -->
+            <div class="filter-group">
+                <label class="filter-label">Age Range</label>
+                <div class="age-range-inputs">
+                    <input type="number" name="age_min" placeholder="Min" class="filter-input" value="{{ current_filters.age_min or '' }}" min="0" max="120">
+                    <span class="text-gray-500">-</span>
+                    <input type="number" name="age_max" placeholder="Max" class="filter-input" value="{{ current_filters.age_max or '' }}" min="0" max="120">
+                    <span class="text-sm text-gray-500">years</span>
+                </div>
+            </div>
+
+            <!-- Surgery Date Range -->
+            <div class="filter-group">
+                <label class="filter-label">Surgery Date (Start)</label>
+                <input type="date" name="surgery_date_start" class="filter-input" value="{{ current_filters.surgery_date_start or '' }}">
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Surgery Date (End)</label>
+                <input type="date" name="surgery_date_end" class="filter-input" value="{{ current_filters.surgery_date_end or '' }}">
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn-primary">Apply Filters</button>
+            <a href="/reports" class="btn-secondary">Clear All</a>
+        </div>
+
+        <!-- Active Filters -->
+        {% if filters_applied %}
+        <div class="filter-tags">
+            <span class="text-sm font-medium text-gray-700">Active filters:</span>
+            {% for filter in filters_applied %}
+                <span class="filter-tag">{{ filter }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Summary Statistics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-title">Total Patients</div>
+        <div class="stat-value">{{ summary_stats.total_patients }}</div>
+        <div class="stat-breakdown">
+            In current cohort
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">IDH Status Distribution</div>
+        <div class="stat-value">{{ summary_stats.idh_distribution.wild_type + summary_stats.idh_distribution.mutated }}</div>
+        <div class="stat-breakdown">
+            Wild-type: {{ summary_stats.idh_distribution.wild_type }}<br>
+            Mutated: {{ summary_stats.idh_distribution.mutated }}<br>
+            {% if summary_stats.idh_distribution.unknown > 0 %}Unknown: {{ summary_stats.idh_distribution.unknown }}{% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">MGMT Status Distribution</div>
+        <div class="stat-value">{{ summary_stats.mgmt_distribution.methylated + summary_stats.mgmt_distribution.unmethylated }}</div>
+        <div class="stat-breakdown">
+            Methylated: {{ summary_stats.mgmt_distribution.methylated }}<br>
+            Unmethylated: {{ summary_stats.mgmt_distribution.unmethylated }}<br>
+            {% if summary_stats.mgmt_distribution.unknown > 0 %}Unknown: {{ summary_stats.mgmt_distribution.unknown }}{% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Age Statistics</div>
+        {% if summary_stats.age_stats.mean %}
+        <div class="stat-value">{{ summary_stats.age_stats.mean }}</div>
+        <div class="stat-breakdown">
+            Mean age (years)<br>
+            Range: {{ summary_stats.age_stats.min }}-{{ summary_stats.age_stats.max }}<br>
+            Median: {{ summary_stats.age_stats.median }}
+        </div>
+        {% else %}
+        <div class="stat-value">—</div>
+        <div class="stat-breakdown">No age data available</div>
+        {% endif %}
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Gender Distribution</div>
+        <div class="stat-value">{{ summary_stats.gender_distribution.male + summary_stats.gender_distribution.female }}</div>
+        <div class="stat-breakdown">
+            Male: {{ summary_stats.gender_distribution.male }}<br>
+            Female: {{ summary_stats.gender_distribution.female }}
+        </div>
+    </div>
+</div>
+
+<!-- Patient Cohort Table -->
+<div class="cohort-table">
+    <div class="table-header">
+        <div class="table-controls">
+            <div class="results-count">
+                <strong>{{ cohort_data|length }}</strong> patients in cohort
+            </div>
+            <button onclick="exportCohort()" class="export-btn">
+                📊 Export Cohort
+            </button>
+        </div>
+    </div>
+
+    {% if cohort_data %}
+    <div style="overflow-x: auto;">
+        <table class="patient-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>MRN</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Primary Location</th>
+                    <th>IDH Status</th>
+                    <th>MGMT Status</th>
+                    <th>WHO Grade</th>
+                    <th>Ki-67 Index</th>
+                    <th>Surgery Date</th>
+                    <th>Extent of Resection</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in cohort_data %}
+                <tr>
+                    <td>
+                        <a href="/patients/{{ patient.id }}" class="patient-link">
+                            {{ patient.name }}
+                        </a>
+                    </td>
+                    <td>{{ patient.mrn }}</td>
+                    <td>{{ patient.age if patient.age else '—' }}</td>
+                    <td>{{ patient.gender.title() if patient.gender else '—' }}</td>
+                    <td>{{ patient.primary_location if patient.primary_location else '—' }}</td>
+                    <td>
+                        <span class="molecular-marker {% if patient.idh_status == 'wild_type' %}idh-wild-type{% elif patient.idh_status == 'mutated' %}idh-mutated{% else %}unknown-status{% endif %}">
+                            {% if patient.idh_status == 'wild_type' %}Wild-type{% elif patient.idh_status == 'mutated' %}Mutated{% else %}Unknown{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="molecular-marker {% if patient.mgmt_status == 'methylated' %}mgmt-methylated{% elif patient.mgmt_status == 'unmethylated' %}mgmt-unmethylated{% else %}unknown-status{% endif %}">
+                            {% if patient.mgmt_status == 'methylated' %}Methylated{% elif patient.mgmt_status == 'unmethylated' %}Unmethylated{% else %}Unknown{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ patient.who_grade if patient.who_grade != 'Unknown' else '—' }}</td>
+                    <td>{{ patient.ki67_index ~ '%' if patient.ki67_index else '—' }}</td>
+                    <td>{{ patient.surgery_date.strftime('%Y-%m-%d') if patient.surgery_date else '—' }}</td>
+                    <td>{{ patient.extent_of_resection if patient.extent_of_resection else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Patients Found</h3>
+        <p class="max-w-md mx-auto">
+            No patients match the current filter criteria. Try adjusting your filters or clearing them to see more results.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function exportCohort() {
+    // Get current filter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const exportUrl = `/api/reports/export?${urlParams.toString()}&format=csv`;
+
+    // Create temporary link and download
+    const link = document.createElement('a');
+    link.href = exportUrl;
+    link.download = `gbm_cohort_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const ageMin = document.querySelector('input[name="age_min"]').value;
+    const ageMax = document.querySelector('input[name="age_max"]').value;
+
+    if (ageMin && ageMax && parseInt(ageMin) > parseInt(ageMax)) {
+        e.preventDefault();
+        alert('Minimum age cannot be greater than maximum age.');
+        return false;
+    }
+
+    const dateStart = document.querySelector('input[name="surgery_date_start"]').value;
+    const dateEnd = document.querySelector('input[name="surgery_date_end"]').value;
+
+    if (dateStart && dateEnd && new Date(dateStart) > new Date(dateEnd)) {
+        e.preventDefault();
+        alert('Start date cannot be after end date.');
+        return false;
+    }
+});
+</script>
+{% endblock %}

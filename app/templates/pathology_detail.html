@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - GBM Tracker{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-4">
+                    <li>
+                        <a href="/pathologies" class="text-gray-500 hover:text-gray-700">Pathology Reports</a>
+                    </li>
+                    <li class="flex items-center">
+                        <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="ml-4 text-sm font-medium text-gray-900">{{ pathology.histologic_diagnosis }}</span>
+                    </li>
+                </ol>
+            </nav>
+            <h1 class="text-3xl font-bold text-gray-900 mt-2">{{ title }}</h1>
+        </div>
+        <div class="flex space-x-3">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Edit Report
+            </button>
+            <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Patient Information -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Patient Information</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Patient Name</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        <a href="/patients/{{ pathology.patient.id }}" class="text-blue-600 hover:text-blue-800">
+                            {{ pathology.patient.first_name }} {{ pathology.patient.last_name }}
+                        </a>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Medical Record Number</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ pathology.patient.medical_record_number }}</dd>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specimen Information -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Specimen Information</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Specimen Date</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ pathology.specimen_date.strftime('%B %d, %Y') if pathology.specimen_date else "Not specified" }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Pathologist</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ pathology.pathologist_name or "Not specified" }}</dd>
+                </div>
+                {% if pathology.surgery_id %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Related Surgery</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        <a href="/surgeries/{{ pathology.surgery_id }}" class="text-blue-600 hover:text-blue-800">
+                            View Surgery Details
+                        </a>
+                    </dd>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Histologic Diagnosis -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Histologic Diagnosis</h3>
+            <div class="space-y-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Primary Diagnosis</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ pathology.histologic_diagnosis }}</dd>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">WHO Grade</dt>
+                        <dd class="mt-1">
+                            {% if pathology.who_grade %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {% if pathology.who_grade.value == 'IV' %}bg-red-100 text-red-800
+                                    {% elif pathology.who_grade.value == 'III' %}bg-orange-100 text-orange-800
+                                    {% elif pathology.who_grade.value == 'II' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    Grade {{ pathology.who_grade.value }}
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-gray-500">Not specified</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Tumor Cellularity</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ pathology.tumor_cellularity_percent }}% if pathology.tumor_cellularity_percent else "Not specified"
+                        </dd>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Necrosis Present</dt>
+                        <dd class="mt-1">
+                            {% if pathology.necrosis_present is not none %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {% if pathology.necrosis_present %}bg-red-100 text-red-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ "Yes" if pathology.necrosis_present else "No" }}
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-gray-500">Not specified</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Microvascular Proliferation</dt>
+                        <dd class="mt-1">
+                            {% if pathology.microvascular_proliferation is not none %}
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    {% if pathology.microvascular_proliferation %}bg-red-100 text-red-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ "Yes" if pathology.microvascular_proliferation else "No" }}
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-gray-500">Not specified</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Molecular Markers -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Molecular Markers</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">IDH Status</dt>
+                    <dd class="mt-1">
+                        {% if pathology.idh_status %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                {% if pathology.idh_status.value == 'wildtype' %}bg-red-100 text-red-800
+                                {% elif pathology.idh_status.value == 'mutant' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ pathology.idh_status.value.title() }}
+                            </span>
+                        {% else %}
+                            <span class="text-sm text-gray-500">Not specified</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">MGMT Status</dt>
+                    <dd class="mt-1">
+                        {% if pathology.mgmt_status %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                {% if pathology.mgmt_status.value == 'methylated' %}bg-green-100 text-green-800
+                                {% elif pathology.mgmt_status.value == 'unmethylated' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ pathology.mgmt_status.value.title() }}
+                            </span>
+                        {% else %}
+                            <span class="text-sm text-gray-500">Not specified</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">p53 Mutation</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ pathology.p53_mutation or "Not specified" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">EGFR Amplification</dt>
+                    <dd class="mt-1">
+                        {% if pathology.egfr_amplification is not none %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                {% if pathology.egfr_amplification %}bg-red-100 text-red-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ "Present" if pathology.egfr_amplification else "Absent" }}
+                            </span>
+                        {% else %}
+                            <span class="text-sm text-gray-500">Not specified</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Ki-67 Index</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ pathology.ki67_index }}% if pathology.ki67_index else "Not specified"
+                    </dd>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Reports -->
+        {% if pathology.molecular_markers or pathology.immunohistochemistry_results or pathology.genetic_testing_results %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Testing Results</h3>
+            <div class="space-y-4">
+                {% if pathology.molecular_markers %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Molecular Markers</dt>
+                    <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{{ pathology.molecular_markers }}</dd>
+                </div>
+                {% endif %}
+                {% if pathology.immunohistochemistry_results %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Immunohistochemistry Results</dt>
+                    <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{{ pathology.immunohistochemistry_results }}</dd>
+                </div>
+                {% endif %}
+                {% if pathology.genetic_testing_results %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Genetic Testing Results</dt>
+                    <dd class="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{{ pathology.genetic_testing_results }}</dd>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Full Pathology Report -->
+        {% if pathology.pathology_report %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Complete Pathology Report</h3>
+            <div class="bg-gray-50 rounded-md p-4">
+                <pre class="text-sm text-gray-900 whitespace-pre-wrap font-mono">{{ pathology.pathology_report }}</pre>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Notes -->
+        {% if pathology.notes %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+            <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ pathology.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+                <a href="/patients/{{ pathology.patient.id }}" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                    View Patient
+                </a>
+                {% if pathology.surgery_id %}
+                <a href="/surgeries/{{ pathology.surgery_id }}" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                    View Surgery
+                </a>
+                {% endif %}
+                <button class="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                    Download Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Report Summary</h3>
+            <dl class="space-y-3">
+                <div>
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Report ID</dt>
+                    <dd class="mt-1 text-sm text-gray-900">PATH-{{ pathology.id }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Created</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ pathology.created_at.strftime('%B %d, %Y') if pathology.created_at else "Unknown" }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ pathology.updated_at.strftime('%B %d, %Y') if pathology.updated_at else "Never" }}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

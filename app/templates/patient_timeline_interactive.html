@@ -1,0 +1,1042 @@
+{% extends "base.html" %}
+
+{% block title %}Interactive Timeline - {{ patient.first_name }} {{ patient.last_name }} - GBM Tracker{% endblock %}
+
+{% block extra_head %}
+<!-- Vis.js Timeline -->
+<script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/standalone/umd/vis-timeline-graph2d.min.js"></script>
+<link href="https://unpkg.com/vis-timeline@latest/styles/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+
+<style>
+.vis-timeline {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.vis-item {
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.vis-item.vis-selected {
+    border-width: 2px;
+}
+
+/* Custom styling for event types */
+.vis-item.surgery {
+    background-color: #3b82f6;
+    border-color: #2563eb;
+    color: white;
+}
+
+.vis-item.pathology {
+    background-color: #10b981;
+    border-color: #059669;
+    color: white;
+}
+
+.vis-item.diagnosis {
+    background-color: #8b5cf6;
+    border-color: #7c3aed;
+    color: white;
+}
+
+.vis-item.treatment {
+    background-color: #f59e0b;
+    border-color: #d97706;
+    color: white;
+}
+
+.vis-item.follow_up {
+    background-color: #06b6d4;
+    border-color: #0891b2;
+    color: white;
+}
+
+.vis-item.surgery.vis-selected {
+    background-color: #1d4ed8;
+    border-color: #1e40af;
+}
+
+.vis-item.pathology.vis-selected {
+    background-color: #047857;
+    border-color: #065f46;
+}
+
+.vis-item.diagnosis.vis-selected {
+    background-color: #6d28d9;
+    border-color: #5b21b6;
+}
+
+.vis-item.treatment.vis-selected {
+    background-color: #d97706;
+    border-color: #b45309;
+}
+
+.vis-item.follow_up.vis-selected {
+    background-color: #0891b2;
+    border-color: #0e7490;
+}
+
+.timeline-controls {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.event-filter-btn {
+    padding: 8px 16px;
+    margin: 4px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.event-filter-btn:hover {
+    background: #f3f4f6;
+}
+
+.event-filter-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+}
+
+.event-filter-btn.surgery.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+}
+
+.event-filter-btn.pathology.active {
+    background: #10b981;
+    border-color: #059669;
+}
+
+.event-filter-btn.diagnosis.active {
+    background: #8b5cf6;
+    border-color: #7c3aed;
+}
+
+.event-filter-btn.treatment.active {
+    background: #f59e0b;
+    border-color: #d97706;
+}
+
+.event-filter-btn.follow_up.active {
+    background: #06b6d4;
+    border-color: #0891b2;
+}
+
+.timeline-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Colored stat numbers */
+.surgery-color { color: #3b82f6; }
+.pathology-color { color: #10b981; }
+.treatment-color { color: #f59e0b; }
+.follow-up-color { color: #06b6d4; }
+.diagnosis-color { color: #8b5cf6; }
+
+.event-details-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+    display: none;
+}
+
+.event-details-panel.show {
+    display: block;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-overlay.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 600px;
+    max-height: 80vh;
+    width: 90%;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Advanced Controls */
+.controls-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.control-group {
+    margin-bottom: 16px;
+}
+
+.control-group:last-child {
+    margin-bottom: 0;
+}
+
+.control-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.date-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 140px;
+    margin-right: 8px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 8px;
+}
+
+.btn-small:hover {
+    background: #f3f4f6;
+}
+
+.btn-small.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+}
+
+/* Patient Navigation */
+.patient-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.nav-btn {
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: #374151;
+}
+
+.nav-btn:hover {
+    background: #e5e7eb;
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Responsive Timeline */
+@media (max-width: 768px) {
+    .timeline-controls {
+        padding: 12px;
+    }
+
+    .timeline-controls .flex {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .controls-section {
+        padding: 16px;
+    }
+
+    .patient-nav {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 16px;
+        margin: 10px;
+    }
+
+    #timeline-visualization {
+        height: 300px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .timeline-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .date-input {
+        width: 120px;
+    }
+
+    .event-filter-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-4">
+                    <li>
+                        <a href="/patients" class="text-gray-500 hover:text-gray-700">Patients</a>
+                    </li>
+                    <li class="flex items-center">
+                        <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <a href="/patients/{{ patient.id }}" class="ml-4 text-gray-500 hover:text-gray-700">{{ patient.first_name }} {{ patient.last_name }}</a>
+                    </li>
+                    <li class="flex items-center">
+                        <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="ml-4 text-sm font-medium text-gray-900">Interactive Timeline</span>
+                    </li>
+                </ol>
+            </nav>
+            <h1 class="text-3xl font-bold text-gray-900 mt-2">Interactive Timeline - {{ patient.first_name }} {{ patient.last_name }}</h1>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/patients/{{ patient.id }}/timeline" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Standard Timeline</span>
+            </a>
+            <a href="/patients/{{ patient.id }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span>Patient Details</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Summary Card -->
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <div class="flex items-center space-x-4">
+        <div class="flex-shrink-0 h-16 w-16">
+            <div class="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+                <svg class="h-10 w-10 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-lg font-medium text-gray-900">{{ patient.first_name }} {{ patient.last_name }}</h3>
+            <p class="text-sm text-gray-500">MRN: {{ patient.medical_record_number }}</p>
+            {% if patient.date_of_birth %}
+                <p class="text-sm text-gray-500">DOB: {{ patient.date_of_birth.strftime('%B %d, %Y') }}</p>
+            {% endif %}
+        </div>
+        <div class="text-right">
+            <p class="text-sm font-medium text-gray-900">{{ timeline_events|length }} Timeline Event{{ "s" if timeline_events|length != 1 else "" }}</p>
+            {% if patient.initial_diagnosis_date %}
+                <p class="text-sm text-gray-500">Diagnosed: {{ patient.initial_diagnosis_date.strftime('%B %d, %Y') }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Patient Navigation -->
+<div class="patient-nav">
+    <span class="text-sm font-medium text-gray-700">Navigate Patients:</span>
+    <a href="/patients/{{ (patient.id - 1) if patient.id > 1 else patient.id }}/timeline/interactive"
+       class="nav-btn {{ 'disabled' if patient.id <= 1 else '' }}"
+       {{ 'onclick="return false;"' if patient.id <= 1 else '' }}>
+        ← Previous Patient
+    </a>
+    <span class="text-sm text-gray-500">Patient {{ patient.id }}</span>
+    <a href="/patients/{{ patient.id + 1 }}/timeline/interactive" class="nav-btn">
+        Next Patient →
+    </a>
+    <div class="ml-auto">
+        <select id="patient-selector" class="date-input" onchange="navigateToPatient(this.value)">
+            <option value="">Jump to Patient...</option>
+            {% for i in range(1, 41) %}
+                <option value="{{ i }}" {{ 'selected' if i == patient.id else '' }}>
+                    Patient {{ i }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+{% if timeline_events %}
+<!-- Advanced Timeline Controls -->
+<div class="controls-section">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Timeline Controls & Filters</h3>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Event Type Filters -->
+        <div class="control-group">
+            <label class="control-label">Event Types</label>
+            <div class="flex flex-wrap gap-2">
+                <button class="btn-small active" onclick="filterTimeline('all')" data-type="all" id="filter-all">
+                    All Events
+                </button>
+                <button class="btn-small" onclick="filterTimeline('surgery')" data-type="surgery" id="filter-surgery">
+                    🔵 Surgery
+                </button>
+                <button class="btn-small" onclick="filterTimeline('pathology')" data-type="pathology" id="filter-pathology">
+                    🟢 Pathology
+                </button>
+                <button class="btn-small" onclick="filterTimeline('treatment')" data-type="treatment" id="filter-treatment">
+                    🟠 Treatment
+                </button>
+                <button class="btn-small" onclick="filterTimeline('follow_up')" data-type="follow_up" id="filter-follow-up">
+                    🔵 Follow-Up
+                </button>
+                <button class="btn-small" onclick="filterTimeline('diagnosis')" data-type="diagnosis" id="filter-diagnosis">
+                    🟣 Diagnosis
+                </button>
+            </div>
+        </div>
+
+        <!-- Date Range Selection -->
+        <div class="control-group">
+            <label class="control-label">Date Range</label>
+            <div class="flex flex-wrap gap-2 items-center">
+                <input type="date" id="start-date" class="date-input" onchange="applyDateFilter()">
+                <span class="text-sm text-gray-500">to</span>
+                <input type="date" id="end-date" class="date-input" onchange="applyDateFilter()">
+                <button class="btn-small" onclick="clearDateFilter()">Clear</button>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <button class="btn-small" onclick="setDateRange('last30days')">Last 30 Days</button>
+                <button class="btn-small" onclick="setDateRange('last6months')">Last 6 Months</button>
+                <button class="btn-small" onclick="setDateRange('lastyear')">Last Year</button>
+                <button class="btn-small" onclick="setDateRange('all')">All Time</button>
+            </div>
+        </div>
+
+        <!-- Timeline View Controls -->
+        <div class="control-group">
+            <label class="control-label">View Controls</label>
+            <div class="flex flex-wrap gap-2">
+                <button class="btn-small" onclick="timeline.fit()">
+                    📏 Fit All
+                </button>
+                <button class="btn-small" onclick="timeline.zoomIn(0.2)">
+                    🔍+ Zoom In
+                </button>
+                <button class="btn-small" onclick="timeline.zoomOut(0.2)">
+                    🔍- Zoom Out
+                </button>
+                <button class="btn-small" onclick="exportTimeline()">
+                    📊 Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline Statistics -->
+<div class="timeline-stats">
+    <div class="stat-card">
+        <div class="stat-number" id="total-events">{{ timeline_events|length }}</div>
+        <div class="stat-label">Total Events</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number surgery-color" id="surgery-count">
+            {% set surgery_count = timeline_events|selectattr("type", "equalto", "surgery")|list|length %}
+            {{ surgery_count }}
+        </div>
+        <div class="stat-label">Surgeries</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number pathology-color" id="pathology-count">
+            {% set pathology_count = timeline_events|selectattr("type", "equalto", "pathology")|list|length %}
+            {{ pathology_count }}
+        </div>
+        <div class="stat-label">Pathology Reports</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number treatment-color" id="treatment-count">
+            {% set treatment_count = timeline_events|selectattr("type", "equalto", "treatment")|list|length %}
+            {{ treatment_count }}
+        </div>
+        <div class="stat-label">Treatments</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number follow-up-color" id="follow-up-count">
+            {% set follow_up_count = timeline_events|selectattr("type", "equalto", "follow_up")|list|length %}
+            {{ follow_up_count }}
+        </div>
+        <div class="stat-label">Follow-Up Visits</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number diagnosis-color" id="diagnosis-count">
+            {% set diagnosis_count = timeline_events|selectattr("type", "equalto", "diagnosis")|list|length %}
+            {{ diagnosis_count }}
+        </div>
+        <div class="stat-label">Diagnoses</div>
+    </div>
+</div>
+
+
+<!-- Interactive Timeline Container -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Interactive Medical Timeline</h3>
+        <p class="text-sm text-gray-500">Click and drag to pan, scroll to zoom, click events for details</p>
+    </div>
+    <div class="p-6">
+        <div id="timeline-visualization" style="height: 400px;"></div>
+    </div>
+</div>
+
+<!-- Event Details Panel -->
+<div id="event-details" class="event-details-panel">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Event Details</h3>
+    <div id="event-details-content">
+        <!-- Details will be populated by JavaScript -->
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div id="event-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900" id="modal-title">Event Details</h2>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        </div>
+        <div id="modal-content">
+            <!-- Modal content will be populated by JavaScript -->
+        </div>
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+            <button onclick="closeModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                Close
+            </button>
+            <a id="modal-view-link" href="#" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                View Full Details
+            </a>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-12">
+    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No Timeline Events</h3>
+    <p class="text-gray-500 mb-6 max-w-md mx-auto">
+        No timeline events have been recorded for {{ patient.first_name }} {{ patient.last_name }} yet.
+    </p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Timeline data from server
+const timelineData = {{ timeline_events_json|safe }};
+let timeline;
+let items;
+let filteredItems;
+
+// Initialize timeline when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    if (timelineData && timelineData.length > 0) {
+        initializeTimeline();
+    }
+});
+
+function initializeTimeline() {
+    // Create a DataSet with timeline items
+    items = new vis.DataSet();
+
+    // Convert timeline data to Vis.js format
+    timelineData.forEach(function(event, index) {
+        const item = {
+            id: index,
+            content: event.title,
+            start: event.date,
+            type: 'box',
+            className: event.type,
+            title: event.description, // Tooltip
+            eventData: event // Store full event data
+        };
+
+        items.add(item);
+    });
+
+    filteredItems = new vis.DataSet(items.get());
+
+    // Configuration options
+    const options = {
+        width: '100%',
+        height: '400px',
+        margin: {
+            item: 10,
+            axis: 40
+        },
+        orientation: 'top',
+        zoomable: true,
+        moveable: true,
+        showCurrentTime: false,
+        format: {
+            minorLabels: {
+                millisecond:'SSS',
+                second:     's',
+                minute:     'HH:mm',
+                hour:       'HH:mm',
+                weekday:    'ddd D',
+                day:        'D',
+                week:       'w',
+                month:      'MMM',
+                year:       'YYYY'
+            },
+            majorLabels: {
+                millisecond:'HH:mm:ss',
+                second:     'D MMMM HH:mm',
+                minute:     'ddd D MMMM',
+                hour:       'ddd D MMMM',
+                weekday:    'MMMM YYYY',
+                day:        'MMMM YYYY',
+                week:       'MMMM YYYY',
+                month:      'YYYY',
+                year:       ''
+            }
+        },
+        tooltip: {
+            followMouse: true,
+            overflowMethod: 'cap'
+        }
+    };
+
+    // Create Timeline
+    const container = document.getElementById('timeline-visualization');
+    timeline = new vis.Timeline(container, filteredItems, options);
+
+    // Add click event listener
+    timeline.on('click', function (properties) {
+        if (properties.item) {
+            showEventDetails(properties.item);
+        }
+    });
+
+    // Fit timeline to show all events
+    timeline.fit();
+}
+
+function filterTimeline(eventType) {
+    // Update button states
+    document.querySelectorAll('.event-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-type="${eventType}"]`).classList.add('active');
+
+    // Filter items
+    if (eventType === 'all') {
+        filteredItems = new vis.DataSet(items.get());
+    } else {
+        const filtered = items.get().filter(item => item.className === eventType);
+        filteredItems = new vis.DataSet(filtered);
+    }
+
+    // Update timeline
+    timeline.setItems(filteredItems);
+    timeline.fit();
+
+    // Update statistics
+    updateStatistics(eventType);
+}
+
+function updateStatistics(filterType) {
+    const allEvents = items.get();
+    const visibleEvents = filteredItems.get();
+
+    document.getElementById('total-events').textContent = visibleEvents.length;
+
+    if (filterType === 'all') {
+        document.getElementById('surgery-count').textContent =
+            allEvents.filter(item => item.className === 'surgery').length;
+        document.getElementById('pathology-count').textContent =
+            allEvents.filter(item => item.className === 'pathology').length;
+        document.getElementById('treatment-count').textContent =
+            allEvents.filter(item => item.className === 'treatment').length;
+        document.getElementById('follow-up-count').textContent =
+            allEvents.filter(item => item.className === 'follow_up').length;
+        document.getElementById('diagnosis-count').textContent =
+            allEvents.filter(item => item.className === 'diagnosis').length;
+    } else {
+        // Reset other counts when filtering
+        document.getElementById('surgery-count').textContent =
+            filterType === 'surgery' ? visibleEvents.length : 0;
+        document.getElementById('pathology-count').textContent =
+            filterType === 'pathology' ? visibleEvents.length : 0;
+        document.getElementById('treatment-count').textContent =
+            filterType === 'treatment' ? visibleEvents.length : 0;
+        document.getElementById('follow-up-count').textContent =
+            filterType === 'follow_up' ? visibleEvents.length : 0;
+        document.getElementById('diagnosis-count').textContent =
+            filterType === 'diagnosis' ? visibleEvents.length : 0;
+    }
+}
+
+function showEventDetails(itemId) {
+    const item = items.get(itemId);
+    const eventData = item.eventData;
+
+    let detailsHtml = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h4 class="font-medium text-gray-900">${eventData.title}</h4>
+                <p class="text-sm text-gray-500 mt-1">${eventData.description}</p>
+                <p class="text-sm text-gray-500 mt-1">Date: ${new Date(eventData.date).toLocaleDateString()}</p>
+            </div>
+            <div>
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                    ${eventData.type === 'surgery' ? 'bg-blue-100 text-blue-800' :
+                      eventData.type === 'pathology' ? 'bg-green-100 text-green-800' :
+                      eventData.type === 'treatment' ? 'bg-orange-100 text-orange-800' :
+                      eventData.type === 'follow_up' ? 'bg-cyan-100 text-cyan-800' :
+                      'bg-purple-100 text-purple-800'}">
+                    ${eventData.type.charAt(0).toUpperCase() + eventData.type.slice(1)}
+                </span>
+            </div>
+        </div>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+    `;
+
+    // Add type-specific details
+    Object.entries(eventData.details).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            detailsHtml += `
+                <div class="flex justify-between">
+                    <span class="text-gray-500">${label}:</span>
+                    <span class="font-medium">${value}</span>
+                </div>
+            `;
+        }
+    });
+
+    detailsHtml += `</div>`;
+
+    if (eventData.url) {
+        detailsHtml += `
+            <div class="mt-4">
+                <a href="${eventData.url}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View Full Details →
+                </a>
+            </div>
+        `;
+    }
+
+    document.getElementById('event-details-content').innerHTML = detailsHtml;
+    document.getElementById('event-details').classList.add('show');
+}
+
+// Modal functionality
+function closeModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    document.getElementById('event-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Enhanced event details with modal
+function showEventModal(itemId) {
+    const item = items.get(itemId);
+    const eventData = item.eventData;
+
+    // Set modal title
+    document.getElementById('modal-title').textContent = eventData.title;
+
+    // Build detailed content
+    let modalContent = `
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">${eventData.title}</h3>
+                    <p class="text-sm text-gray-500">${eventData.description}</p>
+                </div>
+                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
+                    ${eventData.type === 'surgery' ? 'bg-blue-100 text-blue-800' :
+                      eventData.type === 'pathology' ? 'bg-green-100 text-green-800' :
+                      eventData.type === 'treatment' ? 'bg-orange-100 text-orange-800' :
+                      eventData.type === 'follow_up' ? 'bg-cyan-100 text-cyan-800' :
+                      'bg-purple-100 text-purple-800'}">
+                    ${eventData.type.charAt(0).toUpperCase() + eventData.type.slice(1)}
+                </span>
+            </div>
+
+            <div class="border-t pt-4">
+                <h4 class="font-medium text-gray-900 mb-3">Event Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="flex justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-500">Date:</span>
+                        <span class="font-medium">${new Date(eventData.date).toLocaleDateString()}</span>
+                    </div>
+    `;
+
+    // Add type-specific details
+    Object.entries(eventData.details).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            modalContent += `
+                <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-500">${label}:</span>
+                    <span class="font-medium">${value}</span>
+                </div>
+            `;
+        }
+    });
+
+    modalContent += `
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Set modal content and link
+    document.getElementById('modal-content').innerHTML = modalContent;
+    if (eventData.url) {
+        document.getElementById('modal-view-link').href = eventData.url;
+        document.getElementById('modal-view-link').style.display = 'inline-block';
+    } else {
+        document.getElementById('modal-view-link').style.display = 'none';
+    }
+
+    // Show modal
+    document.getElementById('event-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Date filtering functions
+function applyDateFilter() {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+
+    if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start > end) {
+        alert('Start date must be before end date');
+        return;
+    }
+
+    // Filter timeline items
+    const allEvents = items.get();
+    const filtered = allEvents.filter(item => {
+        const itemDate = new Date(item.start);
+        return itemDate >= start && itemDate <= end;
+    });
+
+    filteredItems = new vis.DataSet(filtered);
+    timeline.setItems(filteredItems);
+
+    updateStatistics('date-filtered');
+}
+
+function clearDateFilter() {
+    // Reset date inputs
+    document.getElementById('start-date').value = '';
+    document.getElementById('end-date').value = '';
+
+    // Reset timeline to show all events
+    filteredItems = new vis.DataSet(items.get());
+    timeline.setItems(filteredItems);
+
+    // Reset active filter button
+    document.querySelectorAll('.btn-small').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('filter-all').classList.add('active');
+
+    updateStatistics('all');
+}
+
+function setDateRange(range) {
+    const today = new Date();
+    let startDate;
+
+    switch(range) {
+        case '1month':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            break;
+        case '3months':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+            break;
+        case '6months':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate());
+            break;
+        case '1year':
+            startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            break;
+        default:
+            return;
+    }
+
+    document.getElementById('start-date').value = startDate.toISOString().split('T')[0];
+    document.getElementById('end-date').value = today.toISOString().split('T')[0];
+
+    applyDateFilter();
+}
+
+// Patient navigation
+function navigateToPatient(patientId) {
+    if (patientId && patientId !== "") {
+        window.location.href = `/patients/${patientId}/timeline/interactive`;
+    }
+}
+
+// Timeline export functionality
+function exportTimeline() {
+    const exportData = {
+        patient: {
+            id: {{ patient.id }},
+            name: "{{ patient.first_name }} {{ patient.last_name }}",
+            mrn: "{{ patient.medical_record_number }}"
+        },
+        events: items.get().map(event => ({
+            date: event.start,
+            type: event.className,
+            title: event.content,
+            details: event.eventData
+        })),
+        export_date: new Date().toISOString()
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `timeline_{{ patient.first_name }}_{{ patient.last_name }}_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+}
+
+// Update the timeline click handler to use modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Replace the existing click handler
+    if (typeof timeline !== 'undefined') {
+        timeline.off('click');
+        timeline.on('click', function (properties) {
+            if (properties.item) {
+                showEventModal(properties.item);
+            }
+        });
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

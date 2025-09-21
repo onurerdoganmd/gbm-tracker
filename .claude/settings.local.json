@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(wmic process where processid=10632 delete:*)",
+      "Bash(dir:*)",
+      "Bash(del gbm_tracker.db)",
+      "Bash(wmic:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

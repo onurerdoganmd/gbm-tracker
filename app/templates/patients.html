@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - GBM Tracker{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">{{ title }}</h1>
+        <div class="flex space-x-3">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                <span>Add Patient</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if patients %}
+<!-- Patient Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Total Patients</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ patients|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Active Cases</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ patients|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">This Month</dt>
+                    <dd class="text-lg font-medium text-gray-900">0</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Follow-ups Due</dt>
+                    <dd class="text-lg font-medium text-gray-900">0</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patients Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for patient in patients %}
+    <div class="bg-white rounded-lg shadow hover-lift card-shadow p-6 border border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ patient.first_name }} {{ patient.last_name }}</h3>
+                    <p class="text-sm text-gray-500">MRN: {{ patient.medical_record_number }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Gender:</span>
+                <span class="text-gray-900">{{ patient.gender.value.title() if patient.gender else "Not specified" }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">DOB:</span>
+                <span class="text-gray-900">{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else "Not specified" }}</span>
+            </div>
+            {% if patient.initial_diagnosis_date %}
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Diagnosis:</span>
+                <span class="text-gray-900">{{ patient.initial_diagnosis_date.strftime('%Y-%m-%d') }}</span>
+            </div>
+            {% endif %}
+            {% if patient.primary_location %}
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Location:</span>
+                <span class="text-gray-900">{{ patient.primary_location }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex space-x-2">
+            <a href="/patients/{{ patient.id }}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg transition-colors duration-200 text-sm">
+                View Details
+            </a>
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition-colors duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<!-- Empty State -->
+<div class="text-center py-12">
+    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No Patients Found</h3>
+    <p class="text-gray-500 mb-6 max-w-md mx-auto">
+        No patients have been registered in the system yet. Start by adding your first patient to begin tracking GBM cases.
+    </p>
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        <span>Add First Patient</span>
+    </button>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - GBM Tracker{% endblock %}
+
+{% block content %}
+<!-- Patient Header -->
+<div class="mb-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ patient.first_name }} {{ patient.last_name }}</h1>
+            <p class="text-lg text-gray-600">MRN: {{ patient.medical_record_number }}</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/patients/{{ patient.id }}/timeline" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Timeline</span>
+            </a>
+            <a href="/patients/{{ patient.id }}/timeline/interactive" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>Interactive</span>
+            </a>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Edit Patient
+            </button>
+            <a href="/patients" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                Back to Patients
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Overview Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a2 2 0 002 2h2a2 2 0 002-2V3a2 2 0 012 2v6h-3a4 4 0 01-4 4v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 01-4-4h3V5z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Surgeries</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ patient.surgeries|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Pathology Reports</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ patient.pathologies|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Treatments</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ patient.treatments|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+                <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Follow-up Visits</dt>
+                    <dd class="text-lg font-medium text-gray-900">{{ patient.follow_up_visits|length }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Details -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Demographics -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Demographics</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Full Name:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.first_name }} {{ patient.last_name }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Date of Birth:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Gender:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.gender.value.title() if patient.gender else "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">MRN:</dt>
+                <dd class="text-sm text-gray-900 font-mono">{{ patient.medical_record_number }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Phone:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.contact_phone or "Not provided" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Email:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.contact_email or "Not provided" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Emergency Contact:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.emergency_contact_name or "Not provided" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Emergency Phone:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.emergency_contact_phone or "Not provided" }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- Medical Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Medical Information</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Initial Diagnosis:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.initial_diagnosis_date.strftime('%Y-%m-%d') if patient.initial_diagnosis_date else "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Primary Location:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.primary_location or "Not specified" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Referring Physician:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.referring_physician or "Not specified" }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <!-- System Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">System Information</h2>
+        <dl class="space-y-4">
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Created:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.created_at.strftime('%Y-%m-%d %H:%M') if patient.created_at else "Unknown" }}</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-sm font-medium text-gray-500">Last Updated:</dt>
+                <dd class="text-sm text-gray-900">{{ patient.updated_at.strftime('%Y-%m-%d %H:%M') if patient.updated_at else "Unknown" }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+<!-- Medical History Sections -->
+{% if patient.medical_history or patient.family_history or patient.current_medications or patient.allergies %}
+<div class="mt-8 space-y-6">
+    {% if patient.medical_history %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Medical History</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ patient.medical_history }}</div>
+    </div>
+    {% endif %}
+
+    {% if patient.family_history %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Family History</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ patient.family_history }}</div>
+    </div>
+    {% endif %}
+
+    {% if patient.current_medications %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Current Medications</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ patient.current_medications }}</div>
+    </div>
+    {% endif %}
+
+    {% if patient.allergies %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Allergies</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ patient.allergies }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if patient.notes %}
+<div class="mt-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Notes</h2>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap">{{ patient.notes }}</div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
