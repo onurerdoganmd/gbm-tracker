@@ -10,7 +10,10 @@
       "Bash(dir:*)",
       "Bash(del gbm_tracker.db)",
       "Bash(wmic:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(tasklist)",
+      "Bash(sqlite3:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
