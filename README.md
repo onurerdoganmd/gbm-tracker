@@ -67,9 +67,11 @@ GBM Tracker is a modern, web-based patient management system specifically design
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.10 - 3.12 (recommended: Python 3.12)
 - pip (Python package installer)
 - Git
+
+> **⚠️ Note**: This project is compatible with Python 3.10, 3.11, and 3.12. Using a virtual environment is strongly recommended to avoid dependency conflicts.
 
 ### Installation
 
@@ -90,22 +92,27 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-3. **Install dependencies**
+3. **Upgrade pip and essential packages**
 ```bash
-pip install fastapi uvicorn sqlalchemy jinja2 python-multipart
+pip install --upgrade pip setuptools wheel
 ```
 
-4. **Initialize database with mock data**
+4. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+5. **Initialize database with mock data**
 ```bash
 python seed_data.py
 ```
 
-5. **Start the application**
+6. **Start the application**
 ```bash
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-6. **Access the application**
+7. **Access the application**
 Open your browser and navigate to: `http://localhost:8000`
 
 ## 📱 Screenshots
