@@ -20,6 +20,22 @@ GBM Tracker is a modern, web-based patient management system specifically design
 - **Data Export**: Research-ready CSV exports for statistical analysis
 - **Responsive Design**: Accessible on desktop, tablet, and mobile devices
 
+## 🚀 Latest Updates (September 2025)
+
+### Enhanced Reporting Functionality
+- **🔧 Fixed Critical Bugs**: Resolved age filtering logic and WHO Grade enum issues
+- **📊 Enhanced Statistics**: Added survival metrics, molecular correlations, and treatment analytics
+- **🎨 Visual Improvements**: Progress bars, better data presentation, and enhanced UI
+- **🛠️ Robust Filtering**: Fixed apply filters button to handle empty parameters correctly
+- **⚡ Performance**: Improved error handling and parameter validation
+
+### New Features Added
+- **Survival Analysis**: Mean follow-up duration and time since diagnosis calculations
+- **Molecular Correlations**: IDH-MGMT combination analysis with percentage breakdowns
+- **Age Group Analytics**: Statistical distribution across age ranges
+- **Treatment Status Tracking**: Surgery vs non-surgery patient categorization
+- **Enhanced Export API**: Improved CSV export with proper age filtering
+
 ## ✨ Features
 
 ### 👥 Patient Management
@@ -42,11 +58,13 @@ GBM Tracker is a modern, web-based patient management system specifically design
 - **Follow-up Visits**: Neurological assessments and response evaluation
 
 ### 📊 Advanced Reporting & Analytics
-- **Cohort Analysis**: Multi-dimensional patient stratification
-- **Statistical Dashboards**: Real-time demographic and clinical statistics
-- **Filtering System**: Age ranges, molecular markers, surgery dates
+- **Enhanced Cohort Analysis**: Multi-dimensional patient stratification with improved filtering
+- **Statistical Dashboards**: Real-time demographic and clinical statistics with survival metrics
+- **Robust Filtering System**: Age ranges, molecular markers, surgery dates with empty parameter handling
+- **Molecular Correlations**: IDH-MGMT combination analysis and biomarker statistics
 - **Data Export**: CSV format for external statistical analysis
-- **Interactive Visualizations**: Charts and graphs for data interpretation
+- **Interactive Visualizations**: Progress bars, charts, and enhanced data presentation
+- **Treatment Analytics**: Surgery status tracking and treatment progression analysis
 
 ### 📈 Interactive Timeline Visualization
 - **Vis.js Integration**: Professional timeline rendering

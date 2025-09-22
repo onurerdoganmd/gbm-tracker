@@ -264,6 +264,44 @@
     color: #d1d5db;
 }
 
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-idh-wild {
+    background: #dc2626;
+}
+
+.progress-idh-mutated {
+    background: #2563eb;
+}
+
+.progress-mgmt-methylated {
+    background: #16a34a;
+}
+
+.progress-mgmt-unmethylated {
+    background: #dc2626;
+}
+
+.progress-male {
+    background: #3b82f6;
+}
+
+.progress-female {
+    background: #ec4899;
+}
+
 @media (max-width: 768px) {
     .filter-grid {
         grid-template-columns: 1fr;
@@ -385,8 +423,14 @@
         <div class="stat-title">IDH Status Distribution</div>
         <div class="stat-value">{{ summary_stats.idh_distribution.wild_type + summary_stats.idh_distribution.mutated }}</div>
         <div class="stat-breakdown">
-            Wild-type: {{ summary_stats.idh_distribution.wild_type }}<br>
-            Mutated: {{ summary_stats.idh_distribution.mutated }}<br>
+            Wild-type: {{ summary_stats.idh_distribution.wild_type }} ({{ summary_stats.idh_distribution.wild_type_percentage }}%)
+            <div class="progress-bar">
+                <div class="progress-fill progress-idh-wild" style="width: {{ summary_stats.idh_distribution.wild_type_percentage }}%"></div>
+            </div>
+            Mutated: {{ summary_stats.idh_distribution.mutated }} ({{ summary_stats.idh_distribution.mutated_percentage }}%)
+            <div class="progress-bar">
+                <div class="progress-fill progress-idh-mutated" style="width: {{ summary_stats.idh_distribution.mutated_percentage }}%"></div>
+            </div>
             {% if summary_stats.idh_distribution.unknown > 0 %}Unknown: {{ summary_stats.idh_distribution.unknown }}{% endif %}
         </div>
     </div>
@@ -395,8 +439,14 @@
         <div class="stat-title">MGMT Status Distribution</div>
         <div class="stat-value">{{ summary_stats.mgmt_distribution.methylated + summary_stats.mgmt_distribution.unmethylated }}</div>
         <div class="stat-breakdown">
-            Methylated: {{ summary_stats.mgmt_distribution.methylated }}<br>
-            Unmethylated: {{ summary_stats.mgmt_distribution.unmethylated }}<br>
+            Methylated: {{ summary_stats.mgmt_distribution.methylated }} ({{ summary_stats.mgmt_distribution.methylated_percentage }}%)
+            <div class="progress-bar">
+                <div class="progress-fill progress-mgmt-methylated" style="width: {{ summary_stats.mgmt_distribution.methylated_percentage }}%"></div>
+            </div>
+            Unmethylated: {{ summary_stats.mgmt_distribution.unmethylated }} ({{ summary_stats.mgmt_distribution.unmethylated_percentage }}%)
+            <div class="progress-bar">
+                <div class="progress-fill progress-mgmt-unmethylated" style="width: {{ summary_stats.mgmt_distribution.unmethylated_percentage }}%"></div>
+            </div>
             {% if summary_stats.mgmt_distribution.unknown > 0 %}Unknown: {{ summary_stats.mgmt_distribution.unknown }}{% endif %}
         </div>
     </div>
@@ -420,11 +470,79 @@
         <div class="stat-title">Gender Distribution</div>
         <div class="stat-value">{{ summary_stats.gender_distribution.male + summary_stats.gender_distribution.female }}</div>
         <div class="stat-breakdown">
-            Male: {{ summary_stats.gender_distribution.male }}<br>
-            Female: {{ summary_stats.gender_distribution.female }}
+            Male: {{ summary_stats.gender_distribution.male }} ({{ summary_stats.gender_distribution.male_percentage }}%)
+            <div class="progress-bar">
+                <div class="progress-fill progress-male" style="width: {{ summary_stats.gender_distribution.male_percentage }}%"></div>
+            </div>
+            Female: {{ summary_stats.gender_distribution.female }} ({{ summary_stats.gender_distribution.female_percentage }}%)
+            <div class="progress-bar">
+                <div class="progress-fill progress-female" style="width: {{ summary_stats.gender_distribution.female_percentage }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    {% if summary_stats.survival_stats and summary_stats.survival_stats.mean_follow_up_months %}
+    <div class="stat-card">
+        <div class="stat-title">Follow-up Duration</div>
+        <div class="stat-value">{{ summary_stats.survival_stats.mean_follow_up_months }}</div>
+        <div class="stat-breakdown">
+            Mean months since diagnosis<br>
+            Range: {{ summary_stats.survival_stats.min_follow_up_months }}-{{ summary_stats.survival_stats.max_follow_up_months }}<br>
+            Median: {{ summary_stats.survival_stats.median_follow_up_months }} months
+        </div>
+    </div>
+    {% endif %}
+
+    {% if summary_stats.treatment_stats %}
+    <div class="stat-card">
+        <div class="stat-title">Treatment Status</div>
+        <div class="stat-value">{{ summary_stats.treatment_stats.with_surgery }}</div>
+        <div class="stat-breakdown">
+            With surgery: {{ summary_stats.treatment_stats.with_surgery }}<br>
+            No surgery: {{ summary_stats.treatment_stats.without_surgery }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Enhanced Molecular Analysis Section -->
+{% if summary_stats.molecular_correlations %}
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Molecular Marker Analysis</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- IDH/MGMT Correlation -->
+        <div>
+            <h4 class="font-medium text-gray-900 mb-3">IDH-MGMT Combinations</h4>
+            <div class="space-y-2">
+                {% for combo, count in summary_stats.molecular_correlations.idh_mgmt_combinations.items() %}
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span class="text-sm">
+                        {% set parts = combo.split('_') %}
+                        {% if parts[0] == 'wild_type' %}IDH Wild-type{% elif parts[0] == 'mutated' %}IDH Mutated{% else %}IDH Unknown{% endif %} +
+                        {% if parts[1] == 'methylated' %}MGMT Methylated{% elif parts[1] == 'unmethylated' %}MGMT Unmethylated{% else %}MGMT Unknown{% endif %}
+                    </span>
+                    <span class="font-medium text-blue-600">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Age Group Distribution -->
+        <div>
+            <h4 class="font-medium text-gray-900 mb-3">Age Group Distribution</h4>
+            <div class="space-y-2">
+                {% for age_group, count in summary_stats.molecular_correlations.age_groups.items() %}
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span class="text-sm">{{ age_group }} years</span>
+                    <span class="font-medium text-green-600">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- Patient Cohort Table -->
 <div class="cohort-table">

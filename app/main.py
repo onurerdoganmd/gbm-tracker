@@ -201,17 +201,27 @@ class TreatmentUpdate(BaseModel):
 class FollowUpVisitCreate(BaseModel):
     patient_id: int
     visit_date: date
-    visit_type: Optional[str] = None
+    visit_type: Optional[str] = None  # routine/urgent/post-op
     attending_physician: Optional[str] = None
 
-    # Core clinical assessment fields
-    kps_score: Optional[int] = None
-    neurological_status: Optional[NeurologicalStatus] = None
+    # Core GBM clinical assessment fields as requested
+    kps_score: Optional[int] = None  # Karnofsky Performance Status 0-100
+    ecog_score: Optional[ECOGScore] = None  # ECOG performance status 0-4
+    neurological_status: Optional[NeurologicalStatus] = None  # stable/improved/declined
+    cognitive_assessment: Optional[str] = None
+    motor_function: Optional[str] = None
+    speech_assessment: Optional[str] = None
+    seizure_activity: Optional[str] = None
     steroid_dose_mg: Optional[float] = None
-    ecog_score: Optional[ECOGScore] = None
-    symptoms: Optional[str] = None
+    current_medications: Optional[str] = None
+    symptoms_reported: Optional[str] = None
     physical_exam_findings: Optional[str] = None
+    clinical_impression: Optional[str] = None
     next_appointment_date: Optional[date] = None
+    visit_notes: Optional[str] = None
+
+    # Legacy/additional fields for backward compatibility
+    symptoms: Optional[str] = None
 
     # Additional clinical fields
     imaging_date: Optional[date] = None
@@ -222,7 +232,6 @@ class FollowUpVisitCreate(BaseModel):
     lab_date: Optional[date] = None
     lab_results: Optional[str] = None
 
-    current_medications: Optional[str] = None
     medication_changes: Optional[str] = None
 
     next_visit_date: Optional[date] = None
@@ -232,17 +241,27 @@ class FollowUpVisitCreate(BaseModel):
 
 class FollowUpVisitUpdate(BaseModel):
     visit_date: Optional[date] = None
-    visit_type: Optional[str] = None
+    visit_type: Optional[str] = None  # routine/urgent/post-op
     attending_physician: Optional[str] = None
 
-    # Core clinical assessment fields
-    kps_score: Optional[int] = None
-    neurological_status: Optional[NeurologicalStatus] = None
+    # Core GBM clinical assessment fields as requested
+    kps_score: Optional[int] = None  # Karnofsky Performance Status 0-100
+    ecog_score: Optional[ECOGScore] = None  # ECOG performance status 0-4
+    neurological_status: Optional[NeurologicalStatus] = None  # stable/improved/declined
+    cognitive_assessment: Optional[str] = None
+    motor_function: Optional[str] = None
+    speech_assessment: Optional[str] = None
+    seizure_activity: Optional[str] = None
     steroid_dose_mg: Optional[float] = None
-    ecog_score: Optional[ECOGScore] = None
-    symptoms: Optional[str] = None
+    current_medications: Optional[str] = None
+    symptoms_reported: Optional[str] = None
     physical_exam_findings: Optional[str] = None
+    clinical_impression: Optional[str] = None
     next_appointment_date: Optional[date] = None
+    visit_notes: Optional[str] = None
+
+    # Legacy/additional fields for backward compatibility
+    symptoms: Optional[str] = None
 
     # Additional clinical fields
     imaging_date: Optional[date] = None
@@ -253,7 +272,6 @@ class FollowUpVisitUpdate(BaseModel):
     lab_date: Optional[date] = None
     lab_results: Optional[str] = None
 
-    current_medications: Optional[str] = None
     medication_changes: Optional[str] = None
 
     next_visit_date: Optional[date] = None
@@ -492,12 +510,20 @@ async def get_patient_timeline(request: Request, patient_id: int, db: Session = 
                     "attending_physician": visit.attending_physician,
                     "visit_type": visit.visit_type,
                     "kps_score": visit.kps_score,
-                    "neurological_status": visit.neurological_status.value.title() if visit.neurological_status else None,
                     "ecog_score": f"ECOG {visit.ecog_score.value}" if visit.ecog_score else None,
+                    "neurological_status": visit.neurological_status.value.title() if visit.neurological_status else None,
+                    "cognitive_assessment": getattr(visit, 'cognitive_assessment', None),
+                    "motor_function": getattr(visit, 'motor_function', None),
+                    "speech_assessment": getattr(visit, 'speech_assessment', None),
+                    "seizure_activity": getattr(visit, 'seizure_activity', None),
                     "steroid_dose_mg": f"{visit.steroid_dose_mg} mg" if visit.steroid_dose_mg else None,
-                    "symptoms": visit.symptoms,
+                    "current_medications": visit.current_medications,
+                    "symptoms_reported": getattr(visit, 'symptoms_reported', None),
                     "physical_exam_findings": visit.physical_exam_findings,
+                    "clinical_impression": getattr(visit, 'clinical_impression', None),
                     "next_appointment_date": visit.next_appointment_date.isoformat() if visit.next_appointment_date else None,
+                    "visit_notes": getattr(visit, 'visit_notes', None),
+                    "symptoms": visit.symptoms,  # keeping for backward compatibility
                     "treatment_plan": visit.treatment_plan
                 },
                 "id": visit.id,
@@ -649,12 +675,20 @@ async def get_patient_timeline_interactive(request: Request, patient_id: int, db
                     "attending_physician": visit.attending_physician,
                     "visit_type": visit.visit_type,
                     "kps_score": visit.kps_score,
-                    "neurological_status": visit.neurological_status.value.title() if visit.neurological_status else None,
                     "ecog_score": f"ECOG {visit.ecog_score.value}" if visit.ecog_score else None,
+                    "neurological_status": visit.neurological_status.value.title() if visit.neurological_status else None,
+                    "cognitive_assessment": getattr(visit, 'cognitive_assessment', None),
+                    "motor_function": getattr(visit, 'motor_function', None),
+                    "speech_assessment": getattr(visit, 'speech_assessment', None),
+                    "seizure_activity": getattr(visit, 'seizure_activity', None),
                     "steroid_dose_mg": f"{visit.steroid_dose_mg} mg" if visit.steroid_dose_mg else None,
-                    "symptoms": visit.symptoms,
+                    "current_medications": visit.current_medications,
+                    "symptoms_reported": getattr(visit, 'symptoms_reported', None),
                     "physical_exam_findings": visit.physical_exam_findings,
+                    "clinical_impression": getattr(visit, 'clinical_impression', None),
                     "next_appointment_date": visit.next_appointment_date.isoformat() if visit.next_appointment_date else None,
+                    "visit_notes": getattr(visit, 'visit_notes', None),
+                    "symptoms": visit.symptoms,  # keeping for backward compatibility
                     "treatment_plan": visit.treatment_plan
                 },
                 "id": visit.id,
@@ -803,12 +837,20 @@ async def api_get_patient_timeline(patient_id: int, db: Session = Depends(get_db
                     "attending_physician": visit.attending_physician,
                     "visit_type": visit.visit_type,
                     "kps_score": visit.kps_score,
-                    "neurological_status": visit.neurological_status.value.title() if visit.neurological_status else None,
                     "ecog_score": f"ECOG {visit.ecog_score.value}" if visit.ecog_score else None,
+                    "neurological_status": visit.neurological_status.value.title() if visit.neurological_status else None,
+                    "cognitive_assessment": getattr(visit, 'cognitive_assessment', None),
+                    "motor_function": getattr(visit, 'motor_function', None),
+                    "speech_assessment": getattr(visit, 'speech_assessment', None),
+                    "seizure_activity": getattr(visit, 'seizure_activity', None),
                     "steroid_dose_mg": f"{visit.steroid_dose_mg} mg" if visit.steroid_dose_mg else None,
-                    "symptoms": visit.symptoms,
+                    "current_medications": visit.current_medications,
+                    "symptoms_reported": getattr(visit, 'symptoms_reported', None),
                     "physical_exam_findings": visit.physical_exam_findings,
+                    "clinical_impression": getattr(visit, 'clinical_impression', None),
                     "next_appointment_date": visit.next_appointment_date.isoformat() if visit.next_appointment_date else None,
+                    "visit_notes": getattr(visit, 'visit_notes', None),
+                    "symptoms": visit.symptoms,  # keeping for backward compatibility
                     "treatment_plan": visit.treatment_plan
                 },
                 "id": visit.id,
@@ -1452,20 +1494,31 @@ async def api_get_follow_up_visit(visit_id: int, db: Session = Depends(get_db)):
         "visit_date": visit.visit_date.isoformat() if visit.visit_date else None,
         "visit_type": visit.visit_type,
         "attending_physician": visit.attending_physician,
+
+        # Core GBM clinical assessment fields
         "kps_score": visit.kps_score,
-        "neurological_status": visit.neurological_status.value if visit.neurological_status else None,
-        "steroid_dose_mg": float(visit.steroid_dose_mg) if visit.steroid_dose_mg else None,
         "ecog_score": visit.ecog_score.value if visit.ecog_score else None,
-        "symptoms": visit.symptoms,
+        "neurological_status": visit.neurological_status.value if visit.neurological_status else None,
+        "cognitive_assessment": getattr(visit, 'cognitive_assessment', None),
+        "motor_function": getattr(visit, 'motor_function', None),
+        "speech_assessment": getattr(visit, 'speech_assessment', None),
+        "seizure_activity": getattr(visit, 'seizure_activity', None),
+        "steroid_dose_mg": float(visit.steroid_dose_mg) if visit.steroid_dose_mg else None,
+        "current_medications": visit.current_medications,
+        "symptoms_reported": getattr(visit, 'symptoms_reported', None),
         "physical_exam_findings": visit.physical_exam_findings,
+        "clinical_impression": getattr(visit, 'clinical_impression', None),
         "next_appointment_date": visit.next_appointment_date.isoformat() if visit.next_appointment_date else None,
+        "visit_notes": getattr(visit, 'visit_notes', None),
+
+        # Legacy/additional fields
+        "symptoms": visit.symptoms,
         "imaging_date": visit.imaging_date.isoformat() if visit.imaging_date else None,
         "imaging_type": visit.imaging_type,
         "tumor_measurements": visit.tumor_measurements,
         "imaging_notes": visit.imaging_notes,
         "lab_date": visit.lab_date.isoformat() if visit.lab_date else None,
         "lab_results": visit.lab_results,
-        "current_medications": visit.current_medications,
         "medication_changes": visit.medication_changes,
         "next_visit_date": visit.next_visit_date.isoformat() if visit.next_visit_date else None,
         "next_imaging_date": visit.next_imaging_date.isoformat() if visit.next_imaging_date else None,
@@ -1545,12 +1598,28 @@ async def get_reports(
     db: Session = Depends(get_db),
     idh_status: str = None,
     mgmt_status: str = None,
-    age_min: int = None,
-    age_max: int = None,
+    age_min: str = None,
+    age_max: str = None,
     surgery_date_start: str = None,
     surgery_date_end: str = None,
     who_grade: str = None
 ):
+    # Convert age parameters from strings to integers, handling empty strings
+    age_min_int = None
+    age_max_int = None
+
+    if age_min and age_min.strip():
+        try:
+            age_min_int = int(age_min)
+        except ValueError:
+            age_min_int = None
+
+    if age_max and age_max.strip():
+        try:
+            age_max_int = int(age_max)
+        except ValueError:
+            age_max_int = None
+
     # Start with all patients who have pathology data
     query = db.query(Patient).join(Pathology, Patient.id == Pathology.patient_id)
 
@@ -1575,23 +1644,25 @@ async def get_reports(
 
     if who_grade and who_grade != "all":
         if who_grade == "grade_4":
-            query = query.filter(Pathology.who_grade == WHOGrade.GRADE_4)
+            query = query.filter(Pathology.who_grade == WHOGrade.GRADE_IV)
             filters_applied.append(f"WHO Grade: IV")
 
     # Calculate age from date of birth if age filters are provided
-    if age_min is not None or age_max is not None:
+    if age_min_int is not None or age_max_int is not None:
         from datetime import date
         current_date = date.today()
 
-        if age_min is not None:
-            min_birth_date = date(current_date.year - age_max if age_max else 120, current_date.month, current_date.day)
-            query = query.filter(Patient.date_of_birth >= min_birth_date)
-            filters_applied.append(f"Age ≥ {age_min}")
+        if age_min_int is not None:
+            # For minimum age, calculate the latest birth date that would give that age
+            max_birth_date_for_min_age = date(current_date.year - age_min_int, current_date.month, current_date.day)
+            query = query.filter(Patient.date_of_birth <= max_birth_date_for_min_age)
+            filters_applied.append(f"Age ≥ {age_min_int}")
 
-        if age_max is not None:
-            max_birth_date = date(current_date.year - age_min if age_min else 0, current_date.month, current_date.day)
-            query = query.filter(Patient.date_of_birth <= max_birth_date)
-            filters_applied.append(f"Age ≤ {age_max}")
+        if age_max_int is not None:
+            # For maximum age, calculate the earliest birth date that would give that age
+            min_birth_date_for_max_age = date(current_date.year - age_max_int - 1, current_date.month, current_date.day)
+            query = query.filter(Patient.date_of_birth > min_birth_date_for_max_age)
+            filters_applied.append(f"Age ≤ {age_max_int}")
 
     # Apply surgery date filters
     if surgery_date_start or surgery_date_end:
@@ -1599,15 +1670,21 @@ async def get_reports(
 
         if surgery_date_start:
             from datetime import datetime
-            start_date = datetime.strptime(surgery_date_start, "%Y-%m-%d").date()
-            query = query.filter(Surgery.surgery_date >= start_date)
-            filters_applied.append(f"Surgery ≥ {start_date}")
+            try:
+                start_date = datetime.strptime(surgery_date_start, "%Y-%m-%d").date()
+                query = query.filter(Surgery.surgery_date >= start_date)
+                filters_applied.append(f"Surgery ≥ {start_date}")
+            except ValueError:
+                pass  # Invalid date format, ignore filter
 
         if surgery_date_end:
             from datetime import datetime
-            end_date = datetime.strptime(surgery_date_end, "%Y-%m-%d").date()
-            query = query.filter(Surgery.surgery_date <= end_date)
-            filters_applied.append(f"Surgery ≤ {end_date}")
+            try:
+                end_date = datetime.strptime(surgery_date_end, "%Y-%m-%d").date()
+                query = query.filter(Surgery.surgery_date <= end_date)
+                filters_applied.append(f"Surgery ≤ {end_date}")
+            except ValueError:
+                pass  # Invalid date format, ignore filter
 
     # Get distinct patients (avoid duplicates from joins)
     patients = query.distinct().all()
@@ -1671,23 +1748,86 @@ async def get_reports(
     male_count = sum(1 for p in cohort_data if p["gender"] == "male")
     female_count = sum(1 for p in cohort_data if p["gender"] == "female")
 
+    # Calculate survival metrics
+    survival_stats = {}
+    if cohort_data:
+        from datetime import date
+        current_date = date.today()
+
+        # Calculate time since diagnosis
+        diagnosis_times = []
+        for p in cohort_data:
+            if p["diagnosis_date"]:
+                days_since_diagnosis = (current_date - p["diagnosis_date"]).days
+                months_since_diagnosis = days_since_diagnosis / 30.44  # Average days per month
+                diagnosis_times.append(months_since_diagnosis)
+
+        if diagnosis_times:
+            survival_stats = {
+                "mean_follow_up_months": round(sum(diagnosis_times) / len(diagnosis_times), 1),
+                "median_follow_up_months": round(sorted(diagnosis_times)[len(diagnosis_times)//2], 1),
+                "min_follow_up_months": round(min(diagnosis_times), 1),
+                "max_follow_up_months": round(max(diagnosis_times), 1)
+            }
+        else:
+            survival_stats = {}
+
+    # Treatment status analysis
+    treatment_stats = {
+        "with_surgery": sum(1 for p in cohort_data if p["surgery_date"]),
+        "without_surgery": sum(1 for p in cohort_data if not p["surgery_date"])
+    }
+
+    # Molecular marker correlations
+    molecular_correlations = {}
+    if total_patients > 0:
+        # IDH and MGMT correlation
+        idh_mgmt_combos = {}
+        for p in cohort_data:
+            combo = f"{p['idh_status']}_{p['mgmt_status']}"
+            idh_mgmt_combos[combo] = idh_mgmt_combos.get(combo, 0) + 1
+        molecular_correlations["idh_mgmt_combinations"] = idh_mgmt_combos
+
+        # Age group analysis
+        age_groups = {"<40": 0, "40-60": 0, "60-80": 0, ">80": 0}
+        for p in cohort_data:
+            if p["age"]:
+                if p["age"] < 40:
+                    age_groups["<40"] += 1
+                elif p["age"] < 60:
+                    age_groups["40-60"] += 1
+                elif p["age"] < 80:
+                    age_groups["60-80"] += 1
+                else:
+                    age_groups[">80"] += 1
+        molecular_correlations["age_groups"] = age_groups
+
     summary_stats = {
         "total_patients": total_patients,
         "idh_distribution": {
             "wild_type": idh_wild_type,
             "mutated": idh_mutated,
-            "unknown": idh_unknown
+            "unknown": idh_unknown,
+            "wild_type_percentage": round((idh_wild_type / total_patients) * 100, 1) if total_patients > 0 else 0,
+            "mutated_percentage": round((idh_mutated / total_patients) * 100, 1) if total_patients > 0 else 0
         },
         "mgmt_distribution": {
             "methylated": mgmt_methylated,
             "unmethylated": mgmt_unmethylated,
-            "unknown": mgmt_unknown
+            "unknown": mgmt_unknown,
+            "methylated_percentage": round((mgmt_methylated / total_patients) * 100, 1) if total_patients > 0 else 0,
+            "unmethylated_percentage": round((mgmt_unmethylated / total_patients) * 100, 1) if total_patients > 0 else 0
         },
         "age_stats": age_stats,
         "gender_distribution": {
             "male": male_count,
-            "female": female_count
-        }
+            "female": female_count,
+            "male_percentage": round((male_count / total_patients) * 100, 1) if total_patients > 0 else 0,
+            "female_percentage": round((female_count / total_patients) * 100, 1) if total_patients > 0 else 0
+        },
+        "survival_stats": survival_stats,
+        "treatment_stats": treatment_stats,
+        "molecular_correlations": molecular_correlations
     }
 
     return templates.TemplateResponse("reports.html", {
@@ -1711,13 +1851,29 @@ async def export_reports(
     db: Session = Depends(get_db),
     idh_status: str = None,
     mgmt_status: str = None,
-    age_min: int = None,
-    age_max: int = None,
+    age_min: str = None,
+    age_max: str = None,
     surgery_date_start: str = None,
     surgery_date_end: str = None,
     who_grade: str = None,
     format: str = "json"
 ):
+    # Convert age parameters from strings to integers, handling empty strings
+    age_min_int = None
+    age_max_int = None
+
+    if age_min and age_min.strip():
+        try:
+            age_min_int = int(age_min)
+        except ValueError:
+            age_min_int = None
+
+    if age_max and age_max.strip():
+        try:
+            age_max_int = int(age_max)
+        except ValueError:
+            age_max_int = None
+
     # Use the same filtering logic as the main reports endpoint
     query = db.query(Patient).join(Pathology, Patient.id == Pathology.patient_id)
 
@@ -1736,21 +1892,40 @@ async def export_reports(
 
     if who_grade and who_grade != "all":
         if who_grade == "grade_4":
-            query = query.filter(Pathology.who_grade == WHOGrade.GRADE_4)
+            query = query.filter(Pathology.who_grade == WHOGrade.GRADE_IV)
 
-    # Apply age filters
-    if age_min is not None:
-        query = query.filter(Patient.age >= age_min)
-    if age_max is not None:
-        query = query.filter(Patient.age <= age_max)
+    # Apply age filters using birth date calculation
+    if age_min_int is not None or age_max_int is not None:
+        from datetime import date
+        current_date = date.today()
+
+        if age_min_int is not None:
+            # For minimum age, calculate the latest birth date that would give that age
+            max_birth_date_for_min_age = date(current_date.year - age_min_int, current_date.month, current_date.day)
+            query = query.filter(Patient.date_of_birth <= max_birth_date_for_min_age)
+
+        if age_max_int is not None:
+            # For maximum age, calculate the earliest birth date that would give that age
+            min_birth_date_for_max_age = date(current_date.year - age_max_int - 1, current_date.month, current_date.day)
+            query = query.filter(Patient.date_of_birth > min_birth_date_for_max_age)
 
     # Apply surgery date filters
     if surgery_date_start or surgery_date_end:
         query = query.join(Surgery, Patient.id == Surgery.patient_id)
         if surgery_date_start:
-            query = query.filter(Surgery.surgery_date >= surgery_date_start)
+            from datetime import datetime
+            try:
+                start_date = datetime.strptime(surgery_date_start, "%Y-%m-%d").date()
+                query = query.filter(Surgery.surgery_date >= start_date)
+            except ValueError:
+                pass  # Invalid date format, ignore filter
         if surgery_date_end:
-            query = query.filter(Surgery.surgery_date <= surgery_date_end)
+            from datetime import datetime
+            try:
+                end_date = datetime.strptime(surgery_date_end, "%Y-%m-%d").date()
+                query = query.filter(Surgery.surgery_date <= end_date)
+            except ValueError:
+                pass  # Invalid date format, ignore filter
 
     patients = query.distinct().all()
 
@@ -1774,6 +1949,7 @@ async def export_reports(
             surgery = db.query(Surgery).filter(Surgery.patient_id == patient.id).first()
 
             # Calculate age
+            from datetime import date
             today = date.today()
             age = today.year - patient.date_of_birth.year - ((today.month, today.day) < (patient.date_of_birth.month, patient.date_of_birth.day)) if patient.date_of_birth else None
 
