@@ -93,12 +93,6 @@ class ECOGScore(PyEnum):
     SCORE_3 = "3"  # Capable of only limited self-care
     SCORE_4 = "4"  # Completely disabled
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 class Patient(BaseModel):
     __tablename__ = "patients"
@@ -231,20 +225,28 @@ class FollowUpVisit(BaseModel):
 
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
     visit_date = Column(Date, nullable=False)
-    visit_type = Column(String(100))
+    visit_type = Column(String(100))  # routine/urgent/post-op
     attending_physician = Column(String(200))
 
-    # Core clinical assessment fields as requested
+    # Core GBM clinical assessment fields as requested
     kps_score = Column(Integer)  # Karnofsky Performance Status 0-100
+    ecog_score = Column(Enum(ECOGScore))  # ECOG performance status 0-4
     neurological_status = Column(Enum(NeurologicalStatus))  # stable, improved, declined
+    cognitive_assessment = Column(Text)  # cognitive function assessment
+    motor_function = Column(Text)  # motor function assessment
+    speech_assessment = Column(Text)  # speech function assessment
+    seizure_activity = Column(Text)  # seizure activity notes
     steroid_dose_mg = Column(Numeric(8, 2))  # steroid dose in mg
-    ecog_score = Column(Enum(ECOGScore))  # ECOG performance status
-    symptoms = Column(Text)
-    physical_exam_findings = Column(Text)
-    next_appointment_date = Column(Date)
+    current_medications = Column(Text)  # current medications
+    symptoms_reported = Column(Text)  # symptoms reported by patient
+    physical_exam_findings = Column(Text)  # physical examination findings
+    clinical_impression = Column(Text)  # clinician's impression
+    next_appointment_date = Column(Date)  # next appointment date
+    visit_notes = Column(Text)  # comprehensive visit notes
 
     # Legacy/additional fields
     performance_status = Column(Enum(PerformanceStatus))
+    symptoms = Column(Text)  # keeping for backward compatibility
 
     imaging_date = Column(Date)
     imaging_type = Column(String(100))
@@ -255,13 +257,12 @@ class FollowUpVisit(BaseModel):
     lab_date = Column(Date)
     lab_results = Column(Text)
 
-    current_medications = Column(Text)
     medication_changes = Column(Text)
 
     next_visit_date = Column(Date)
     next_imaging_date = Column(Date)
     treatment_plan = Column(Text)
-    notes = Column(Text)
+    notes = Column(Text)  # keeping for backward compatibility
 
     patient = relationship("Patient", back_populates="follow_up_visits")
 
