@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBM Advanced Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+            🧠 GBM Advanced Analytics Dashboard
+        </h1>
+
+        <!-- Patient Filter Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Patient Cohort Selection</h2>
+            <div class="flex gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Patient IDs (comma-separated, leave empty for all patients)
+                    </label>
+                    <input type="text" id="patientIds"
+                           placeholder="e.g., 1,2,3,4,5 or leave empty for all"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="updateAnalytics()"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Update Analytics
+                </button>
+            </div>
+        </div>
+
+        <!-- Analytics Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+
+            <!-- Survival Analysis Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    📊 Survival Analysis
+                    <button onclick="refreshSurvival()" class="ml-auto text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">
+                        Refresh
+                    </button>
+                </h3>
+                <div id="survivalContent" class="space-y-3">
+                    <div class="text-center text-gray-500">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Molecular Correlations Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    🧬 Molecular Correlations
+                    <button onclick="refreshMolecular()" class="ml-auto text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">
+                        Refresh
+                    </button>
+                </h3>
+                <div id="molecularContent" class="space-y-3">
+                    <div class="text-center text-gray-500">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Treatment Response Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 flex items-center">
+                    💊 Treatment Response
+                    <button onclick="refreshTreatment()" class="ml-auto text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">
+                        Refresh
+                    </button>
+                </h3>
+                <div id="treatmentContent" class="space-y-3">
+                    <div class="text-center text-gray-500">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4">📋 Quick Actions</h3>
+                <div class="space-y-3">
+                    <button onclick="downloadPDFReport()"
+                            class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        📄 Download PDF Report
+                    </button>
+                    <button onclick="viewDetailedSurvival()"
+                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        📈 View Detailed Survival Data
+                    </button>
+                    <button onclick="exportToCSV()"
+                            class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        📊 Export to CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comprehensive Analytics Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-6">🔬 Comprehensive Analytics Summary</h2>
+            <div id="comprehensiveContent">
+                <div class="text-center text-gray-500">Click "Update Analytics" to load data</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPatientIds = '';
+
+        function getPatientIdsParam() {
+            const patientIds = document.getElementById('patientIds').value.trim();
+            return patientIds ? `?patient_ids=${encodeURIComponent(patientIds)}` : '';
+        }
+
+        async function fetchJSON(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null;
+            }
+        }
+
+        function formatDays(days) {
+            if (!days) return 'N/A';
+            const months = (days / 30.44).toFixed(1);
+            return `${days.toFixed(0)} days (${months} months)`;
+        }
+
+        function formatPercentage(rate) {
+            return (rate * 100).toFixed(1) + '%';
+        }
+
+        async function refreshSurvival() {
+            const survivalContent = document.getElementById('survivalContent');
+            survivalContent.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
+
+            const data = await fetchJSON('/api/analytics/survival' + getPatientIdsParam());
+            if (!data) {
+                survivalContent.innerHTML = '<div class="text-red-500">Error loading survival data</div>';
+                return;
+            }
+
+            survivalContent.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-blue-50 p-3 rounded">
+                        <div class="font-semibold text-blue-800">Total Patients</div>
+                        <div class="text-2xl font-bold text-blue-600">${data.total_patients}</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded">
+                        <div class="font-semibold text-green-800">Alive</div>
+                        <div class="text-2xl font-bold text-green-600">${data.alive_patients}</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded">
+                        <div class="font-semibold text-red-800">Progressed</div>
+                        <div class="text-2xl font-bold text-red-600">${data.progressed_patients}</div>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded">
+                        <div class="font-semibold text-yellow-800">Progression Rate</div>
+                        <div class="text-2xl font-bold text-yellow-600">${formatPercentage(data.progression_rate)}</div>
+                    </div>
+                </div>
+                <div class="mt-4 space-y-2">
+                    <div><strong>Overall Survival:</strong> ${formatDays(data.overall_survival.mean_days)} (mean)</div>
+                    <div><strong>Time to Progression:</strong> ${formatDays(data.time_to_progression.mean_days)} (mean)</div>
+                    <div><strong>Progression-Free Survival:</strong> ${formatDays(data.progression_free_survival.mean_days)} (mean)</div>
+                </div>
+            `;
+        }
+
+        async function refreshMolecular() {
+            const molecularContent = document.getElementById('molecularContent');
+            molecularContent.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
+
+            const data = await fetchJSON('/api/analytics/molecular-correlations' + getPatientIdsParam());
+            if (!data) {
+                molecularContent.innerHTML = '<div class="text-red-500">Error loading molecular data</div>';
+                return;
+            }
+
+            const idhHtml = Object.entries(data.idh_distribution)
+                .map(([status, count]) => `<div class="flex justify-between"><span>${status}:</span><span class="font-semibold">${count}</span></div>`)
+                .join('');
+
+            const mgmtHtml = Object.entries(data.mgmt_distribution)
+                .map(([status, count]) => `<div class="flex justify-between"><span>${status}:</span><span class="font-semibold">${count}</span></div>`)
+                .join('');
+
+            molecularContent.innerHTML = `
+                <div class="bg-purple-50 p-3 rounded mb-3">
+                    <div class="font-semibold text-purple-800">Patients with Molecular Data</div>
+                    <div class="text-2xl font-bold text-purple-600">${data.total_patients_with_molecular_data}</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2">IDH Status</h4>
+                        <div class="space-y-1 text-sm">${idhHtml}</div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2">MGMT Status</h4>
+                        <div class="space-y-1 text-sm">${mgmtHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function refreshTreatment() {
+            const treatmentContent = document.getElementById('treatmentContent');
+            treatmentContent.innerHTML = '<div class="text-center text-gray-500">Loading...</div>';
+
+            const data = await fetchJSON('/api/analytics/treatment-response' + getPatientIdsParam());
+            if (!data) {
+                treatmentContent.innerHTML = '<div class="text-red-500">Error loading treatment data</div>';
+                return;
+            }
+
+            if (data.total_treatments === 0) {
+                treatmentContent.innerHTML = '<div class="text-gray-500">No treatment data available</div>';
+                return;
+            }
+
+            treatmentContent.innerHTML = `
+                <div class="bg-indigo-50 p-3 rounded mb-3">
+                    <div class="font-semibold text-indigo-800">Total Treatments</div>
+                    <div class="text-2xl font-bold text-indigo-600">${data.total_treatments}</div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>Overall Response Rate:</span>
+                        <span class="font-semibold">${formatPercentage(data.overall_response_rate)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Disease Control Rate:</span>
+                        <span class="font-semibold">${formatPercentage(data.disease_control_rate)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function updateAnalytics() {
+            currentPatientIds = document.getElementById('patientIds').value.trim();
+
+            // Refresh all sections
+            await Promise.all([
+                refreshSurvival(),
+                refreshMolecular(),
+                refreshTreatment()
+            ]);
+
+            // Update comprehensive section
+            const comprehensiveContent = document.getElementById('comprehensiveContent');
+            comprehensiveContent.innerHTML = '<div class="text-center text-gray-500">Loading comprehensive analytics...</div>';
+
+            const data = await fetchJSON('/api/analytics/comprehensive' + getPatientIdsParam());
+            if (data) {
+                comprehensiveContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                        <div class="bg-blue-100 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-blue-600">${data.patient_cohort_size}</div>
+                            <div class="text-blue-800 font-semibold">Total Patients</div>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-green-600">${data.survival_analysis.alive_patients}</div>
+                            <div class="text-green-800 font-semibold">Patients Alive</div>
+                        </div>
+                        <div class="bg-purple-100 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-purple-600">${data.molecular_correlations.total_patients_with_molecular_data}</div>
+                            <div class="text-purple-800 font-semibold">Molecular Data</div>
+                        </div>
+                        <div class="bg-indigo-100 p-4 rounded-lg">
+                            <div class="text-3xl font-bold text-indigo-600">${data.treatment_response.total_treatments}</div>
+                            <div class="text-indigo-800 font-semibold">Treatments</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function downloadPDFReport() {
+            const patientIdsParam = getPatientIdsParam();
+            const title = currentPatientIds ? `GBM Cohort Analysis (${currentPatientIds})` : 'Comprehensive GBM Analysis';
+            const url = `/api/reports/clinical-research-pdf${patientIdsParam}${patientIdsParam ? '&' : '?'}title=${encodeURIComponent(title)}`;
+
+            // Create invisible link and click it
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gbm_report_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function viewDetailedSurvival() {
+            const url = '/api/analytics/survival/details' + getPatientIdsParam();
+            window.open(url, '_blank');
+        }
+
+        function exportToCSV() {
+            const url = '/api/reports/export' + getPatientIdsParam() + (getPatientIdsParam() ? '&' : '?') + 'format=csv';
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gbm_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize dashboard
+        updateAnalytics();
+    </script>
+</body>
+</html>

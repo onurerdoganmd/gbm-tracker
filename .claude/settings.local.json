@@ -14,7 +14,11 @@
       "Bash(tasklist)",
       "Bash(sqlite3:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(venvScripts:*)",
+      "Bash(pip install:*)",
+      "Bash(venvScriptsactivate.bat)",
+      "Bash(move templatesanalytics_dashboard.html apptemplatesanalytics_dashboard.html)"
     ],
     "deny": [],
     "ask": []

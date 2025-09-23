@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Survival Analysis - GBM Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">📈 Detailed Survival Analysis</h1>
+                    <p class="text-gray-600 mt-2">Individual patient survival metrics and progression data</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.close()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                        Close Window
+                    </button>
+                    <button onclick="exportToCSV()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        📊 Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Filter Patients</h2>
+            <div class="flex gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Patient IDs (comma-separated, leave empty for all patients)
+                    </label>
+                    <input type="text" id="patientIds"
+                           placeholder="e.g., 1,2,3,4,5 or leave empty for all"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="loadSurvivalData()"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Update Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div id="summaryStats" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Summary Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="statsGrid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Survival Data Table -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Individual Patient Survival Data</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto" id="survivalTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MRN</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnosis Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Follow-up</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Survival</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time to Progression</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PFS</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+
+        function getPatientIdsParam() {
+            const patientIds = document.getElementById('patientIds').value.trim();
+            return patientIds ? `?patient_ids=${encodeURIComponent(patientIds)}` : '';
+        }
+
+        async function fetchJSON(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null;
+            }
+        }
+
+        function formatDays(days) {
+            if (!days) return 'N/A';
+            const months = (days / 30.44).toFixed(1);
+            return `${days} days (${months} mo)`;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function updateSummaryStats(data) {
+            const totalPatients = data.length;
+            const alivePatients = data.filter(p => p.is_alive).length;
+            const progressedPatients = data.filter(p => p.has_progressed).length;
+            const osValues = data.filter(p => p.overall_survival_days).map(p => p.overall_survival_days);
+            const meanOS = osValues.length > 0 ? (osValues.reduce((a, b) => a + b, 0) / osValues.length).toFixed(1) : 'N/A';
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600">${totalPatients}</div>
+                    <div class="text-blue-800 font-semibold">Total Patients</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">${alivePatients}</div>
+                    <div class="text-green-800 font-semibold">Patients Alive</div>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600">${progressedPatients}</div>
+                    <div class="text-red-800 font-semibold">Progressed</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600">${meanOS}</div>
+                    <div class="text-purple-800 font-semibold">Mean OS (days)</div>
+                </div>
+            `;
+        }
+
+        function updateTable(data) {
+            currentData = data;
+            const tbody = document.getElementById('tableBody');
+
+            tbody.innerHTML = data.map(patient => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">Patient ${patient.patient_id}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${patient.medical_record_number}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formatDate(patient.diagnosis_date)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formatDate(patient.last_follow_up_date)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formatDays(patient.overall_survival_days)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formatDays(patient.time_to_progression_days)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${formatDays(patient.progression_free_survival_days)}</td>
+                    <td class="px-4 py-3 text-sm">
+                        <div class="flex gap-1">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${patient.is_alive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${patient.is_alive ? 'Alive' : 'Deceased'}
+                            </span>
+                            ${patient.has_progressed ? '<span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Progressed</span>' : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadSurvivalData() {
+            const url = '/api/analytics/survival/details' + getPatientIdsParam();
+            const data = await fetchJSON(url);
+
+            if (data && data.survival_metrics) {
+                updateSummaryStats(data.survival_metrics);
+                updateTable(data.survival_metrics);
+            } else {
+                alert('Error loading survival data');
+            }
+        }
+
+        function exportToCSV() {
+            if (currentData.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = ['Patient_ID', 'MRN', 'Diagnosis_Date', 'Last_Follow_Up', 'Overall_Survival_Days', 'Time_to_Progression_Days', 'PFS_Days', 'Is_Alive', 'Has_Progressed'];
+            const csvContent = [
+                headers.join(','),
+                ...currentData.map(patient => [
+                    patient.patient_id,
+                    patient.medical_record_number,
+                    patient.diagnosis_date || '',
+                    patient.last_follow_up_date || '',
+                    patient.overall_survival_days || '',
+                    patient.time_to_progression_days || '',
+                    patient.progression_free_survival_days || '',
+                    patient.is_alive,
+                    patient.has_progressed
+                ].join(','))
+            ].join('\\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `survival_details_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Get patient IDs from URL parameters if provided
+        const urlParams = new URLSearchParams(window.location.search);
+        const patientIds = urlParams.get('patient_ids');
+        if (patientIds) {
+            document.getElementById('patientIds').value = patientIds;
+        }
+
+        // Load initial data
+        loadSurvivalData();
+    </script>
+</body>
+</html>

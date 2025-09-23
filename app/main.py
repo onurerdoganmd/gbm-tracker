@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 
 from .database import get_db, init_db
 from .models import Patient, Surgery, Pathology, Treatment, FollowUpVisit, Gender, SurgeryType, WHOGrade, IDHStatus, MGMTStatus, ATRXStatus, CodeletionStatus, TreatmentType, TreatmentStatus, NeurologicalStatus, ECOGScore
+from .analytics import AdvancedAnalyticsEngine, SurvivalAnalysisEngine, TreatmentResponseAnalyzer, MolecularCorrelationAnalyzer
+from .pdf_reports import generate_clinical_research_report
 
 app = FastAPI(title="GBM Tracker", description="Glioblastoma Multiforme Patient Tracking System")
 
@@ -2012,6 +2014,170 @@ async def export_reports(
             })
 
         return {"patients": patient_data, "count": len(patient_data)}
+
+# Advanced Analytics Endpoints
+
+@app.get("/api/analytics/survival")
+async def get_survival_analysis(patient_ids: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get survival analysis metrics for specified patients or all patients"""
+    patient_id_list = None
+    if patient_ids:
+        try:
+            patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+    engine = SurvivalAnalysisEngine(db)
+    return engine.get_survival_statistics(patient_id_list)
+
+@app.get("/api/analytics/treatment-response")
+async def get_treatment_response_analysis(patient_ids: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get treatment response analysis for specified patients or all patients"""
+    patient_id_list = None
+    if patient_ids:
+        try:
+            patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+    analyzer = TreatmentResponseAnalyzer(db)
+    return analyzer.get_response_statistics(patient_id_list)
+
+@app.get("/api/analytics/molecular-correlations")
+async def get_molecular_correlations(patient_ids: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get molecular marker correlation analysis"""
+    patient_id_list = None
+    if patient_ids:
+        try:
+            patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+    analyzer = MolecularCorrelationAnalyzer(db)
+    return analyzer.get_molecular_summary(patient_id_list)
+
+@app.get("/api/analytics/comprehensive")
+async def get_comprehensive_analytics(patient_ids: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get comprehensive analytics including survival, treatment response, and molecular correlations"""
+    patient_id_list = None
+    if patient_ids:
+        try:
+            patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+    engine = AdvancedAnalyticsEngine(db)
+    return engine.generate_comprehensive_analytics(patient_id_list)
+
+@app.get("/api/analytics/survival/details")
+async def get_survival_details(patient_ids: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get detailed survival metrics for each patient"""
+    patient_id_list = None
+    if patient_ids:
+        try:
+            patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+    engine = SurvivalAnalysisEngine(db)
+    metrics = engine.calculate_survival_metrics(patient_id_list)
+
+    return {
+        "survival_metrics": [
+            {
+                "patient_id": m.patient_id,
+                "medical_record_number": m.medical_record_number,
+                "diagnosis_date": m.diagnosis_date.isoformat() if m.diagnosis_date else None,
+                "last_follow_up_date": m.last_follow_up_date.isoformat() if m.last_follow_up_date else None,
+                "progression_date": m.progression_date.isoformat() if m.progression_date else None,
+                "time_to_progression_days": m.time_to_progression_days,
+                "overall_survival_days": m.overall_survival_days,
+                "progression_free_survival_days": m.progression_free_survival_days,
+                "is_alive": m.is_alive,
+                "has_progressed": m.has_progressed
+            }
+            for m in metrics
+        ]
+    }
+
+@app.get("/api/analytics/treatment-response/details")
+async def get_treatment_response_details(patient_ids: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get detailed treatment response data for each treatment"""
+    patient_id_list = None
+    if patient_ids:
+        try:
+            patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+    analyzer = TreatmentResponseAnalyzer(db)
+    responses = analyzer.analyze_treatment_responses(patient_id_list)
+
+    return {
+        "treatment_responses": [
+            {
+                "patient_id": r.patient_id,
+                "treatment_id": r.treatment_id,
+                "treatment_type": r.treatment_type,
+                "start_date": r.start_date.isoformat() if r.start_date else None,
+                "end_date": r.end_date.isoformat() if r.end_date else None,
+                "response_category": r.response_category,
+                "time_to_response_days": r.time_to_response_days,
+                "duration_of_response_days": r.duration_of_response_days,
+                "best_response": r.best_response
+            }
+            for r in responses
+        ]
+    }
+
+@app.get("/api/reports/clinical-research-pdf")
+async def generate_pdf_report(
+    patient_ids: Optional[str] = None,
+    include_charts: bool = True,
+    title: str = "GBM Clinical Research Analytics Report",
+    db: Session = Depends(get_db)
+):
+    """Generate comprehensive PDF report for clinical research"""
+    try:
+        patient_id_list = None
+        if patient_ids:
+            try:
+                patient_id_list = [int(pid.strip()) for pid in patient_ids.split(',')]
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid patient IDs format")
+
+        pdf_content = generate_clinical_research_report(
+            db=db,
+            patient_ids=patient_id_list,
+            include_charts=include_charts,
+            title=title
+        )
+
+        # Return PDF as downloadable file
+        return StreamingResponse(
+            io.BytesIO(pdf_content),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=gbm_analytics_report_{date.today().isoformat()}.pdf"}
+        )
+
+    except ImportError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"PDF generation dependencies not available: {str(e)}. Please install required packages."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating PDF report: {str(e)}")
+
+# Analytics Dashboard Route
+@app.get("/analytics", response_class=HTMLResponse)
+async def analytics_dashboard(request: Request):
+    """Advanced Analytics Dashboard"""
+    return templates.TemplateResponse("analytics_dashboard.html", {"request": request})
+
+@app.get("/analytics/survival-details", response_class=HTMLResponse)
+async def survival_details_page(request: Request):
+    """Detailed Survival Analysis Page"""
+    return templates.TemplateResponse("survival_details.html", {"request": request})
 
 @app.get("/hello")
 async def hello_world():
